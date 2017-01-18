@@ -4332,6 +4332,11 @@ var App = function () {
   }
 
   _createClass(App, [{
+    key: 'init',
+    value: function init() {
+      this.updateRecipes();
+    }
+  }, {
     key: 'updateRecipes',
     value: function updateRecipes() {
       var _this = this;
@@ -4352,7 +4357,7 @@ var App = function () {
       var urlPlan = this.planTypeSelected;
       return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(function (response) {
         _this2.fetching = false;
-        _this2.recipes = response.two_person_plan.recipes.map(function (r) {
+        _this2.recipes = response[_this2.planTypeSelected + '_plan'].recipes.map(function (r) {
           return r.recipe;
         });
       });
@@ -4369,13 +4374,17 @@ var App = function () {
   }, {
     key: 'selectPlanType',
     value: function selectPlanType(planType) {
+      var _this3 = this;
+
       this.planTypeSelected = planType;
+      this.callbacksFor.planTypeSelected.forEach(function (cb) {
+        return cb(_this3.planTypeSelected);
+      });
       this.updateRecipes();
     }
   }, {
     key: 'selectWeek',
     value: function selectWeek(week) {
-      console.log(week);
       this.weekSelected = week;
       this.updateRecipes();
     }
@@ -4387,6 +4396,47 @@ var App = function () {
 exports.default = App;
 
 },{"moment":1}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var PlanTypeSelectorView = function () {
+  function PlanTypeSelectorView(app) {
+    _classCallCheck(this, PlanTypeSelectorView);
+
+    this.$selectors = $('[data-plan-select]');
+    this.$selectors.on('click', function (e) {
+      e.preventDefault();
+      app.selectPlanType(e.currentTarget.dataset.planSelect);
+    });
+    app.onChange('planTypeSelected', this.render.bind(this));
+  }
+
+  _createClass(PlanTypeSelectorView, [{
+    key: 'render',
+    value: function render(planTypeSelected) {
+      this.$selectors.each(function (i, element) {
+        if (element.dataset.planSelect === planTypeSelected) {
+          $(element).addClass('active');
+        } else {
+          $(element).removeClass('active');
+        }
+      });
+    }
+  }]);
+
+  return PlanTypeSelectorView;
+}();
+
+exports.default = PlanTypeSelectorView;
+
+},{}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4424,7 +4474,7 @@ var RecipesView = function () {
 
 exports.default = RecipesView;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4444,12 +4494,16 @@ var WeekSelectorView = function WeekSelectorView(app) {
 
 exports.default = WeekSelectorView;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var _App = require('./App');
 
 var _App2 = _interopRequireDefault(_App);
+
+var _PlanTypeSelectorView = require('./PlanTypeSelectorView');
+
+var _PlanTypeSelectorView2 = _interopRequireDefault(_PlanTypeSelectorView);
 
 var _WeekSelectorView = require('./WeekSelectorView');
 
@@ -4465,13 +4519,15 @@ var appConfig = {
   planOptions: ['two_person', 'family'],
   planTypeSelected: 'two_person',
   weekOptions: ['2016-03-21', '2016-03-28'],
-  weekSelected: '2016_03_21'
+  weekSelected: '2016-03-21'
 };
 
 $(function () {
   var app = new _App2.default(appConfig);
-  var recipesView = new _RecipesView2.default(app);
   var weekSelectorView = new _WeekSelectorView2.default(app);
+  var planTypeSelectorView = new _PlanTypeSelectorView2.default(app);
+  var recipesView = new _RecipesView2.default(app);
+  app.init();
 });
 
-},{"./App":2,"./RecipesView":3,"./WeekSelectorView":4}]},{},[5]);
+},{"./App":2,"./PlanTypeSelectorView":3,"./RecipesView":4,"./WeekSelectorView":5}]},{},[6]);

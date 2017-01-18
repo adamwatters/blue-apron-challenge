@@ -11,6 +11,10 @@ class App {
     this.callbacksFor = {};
   }
 
+  init() {
+    this.updateRecipes()
+  }
+
   updateRecipes() {
     this.fetchRecipes().then(() => {
       this.callbacksFor.recipes.forEach(cb => cb(this.recipes))
@@ -23,7 +27,7 @@ class App {
     const urlPlan = this.planTypeSelected
     return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(response => {
       this.fetching = false;
-      this.recipes = response.two_person_plan.recipes.map((r) => r.recipe)
+      this.recipes = response[`${this.planTypeSelected}_plan`].recipes.map((r) => r.recipe)
     })
   }
 
@@ -37,11 +41,11 @@ class App {
 
   selectPlanType(planType) {
     this.planTypeSelected = planType
+    this.callbacksFor.planTypeSelected.forEach(cb => cb(this.planTypeSelected))
     this.updateRecipes()
   }
 
   selectWeek(week) {
-    console.log(week)
     this.weekSelected = week
     this.updateRecipes()
   }
