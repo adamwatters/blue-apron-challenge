@@ -22,13 +22,38 @@
         <div class="col-md-4">
           <select id="week_selector" class="form-control">
             <option value="" disabled hidden selected>Choose a week...</option>
-            <option value="02-19-2016">02-19-2016</option>
-            <option value="02-26-2016">02-26-2016</option>
+            <option value="2016-03-21">2016-03-21</option>
+            <option value="2016-03-28">2016-03-28</option>
           </select>
         </div>
       </div>
     </div>
   </div>
+
+  <div class="container">
+    <div class="content-wrap">
+      <div class="row">
+        <div id="recipes" class="clearfix">
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script id="recipe-template" type="text/x-handlebars-template">
+    <div class="col-md-4">
+      <div class="recipe">
+        <img class="recipe__img" src="{{square_hi_res_image_url}}" alt="{{title}}">
+        <div class="recipe__description">
+          <h2 class="recipe__title">{{title}}</h2>
+          <h3 class="recipe__subtitle">{{subtitle}}</h3>
+        </div>
+        <button class="btn btn-default">
+          <img class="icon-wine mr-5" src="../assets/images/icon-wine.png" alt=""> View Wine Pairing
+        </button>
+      </div>
+    </div>
+  </script>
 
   <script src="assets/_defaults/js/jquery-1.12.1.min.js"></script>
   <script src="assets/_defaults/js/bootstrap.min.js"></script>

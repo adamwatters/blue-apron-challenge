@@ -23,7 +23,7 @@ class App {
     const urlPlan = this.planTypeSelected
     return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(response => {
       this.fetching = false;
-      this.recipes = response.two_person_plan.recipes
+      this.recipes = response.two_person_plan.recipes.map((r) => r.recipe)
     })
   }
 
@@ -36,12 +36,13 @@ class App {
   }
 
   selectPlanType(planType) {
-    this.planType = planType
+    this.planTypeSelected = planType
     this.updateRecipes()
   }
 
   selectWeek(week) {
-    this.week = week
+    console.log(week)
+    this.weekSelected = week
     this.updateRecipes()
   }
 

@@ -4352,7 +4352,9 @@ var App = function () {
       var urlPlan = this.planTypeSelected;
       return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(function (response) {
         _this2.fetching = false;
-        _this2.recipes = response.two_person_plan.recipes;
+        _this2.recipes = response.two_person_plan.recipes.map(function (r) {
+          return r.recipe;
+        });
       });
     }
   }, {
@@ -4367,13 +4369,14 @@ var App = function () {
   }, {
     key: 'selectPlanType',
     value: function selectPlanType(planType) {
-      this.planType = planType;
+      this.planTypeSelected = planType;
       this.updateRecipes();
     }
   }, {
     key: 'selectWeek',
     value: function selectWeek(week) {
-      this.week = week;
+      console.log(week);
+      this.weekSelected = week;
       this.updateRecipes();
     }
   }]);
@@ -4390,15 +4393,34 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var RecipesView = function RecipesView(app) {
-  _classCallCheck(this, RecipesView);
+var RecipesView = function () {
+  function RecipesView(app) {
+    _classCallCheck(this, RecipesView);
 
-  app.onChange('recipes', function (recipes) {
-    console.log(recipes);
-  });
-};
+    this.el = $('#recipes');
+    this.recipeTemplate = Handlebars.compile($("#recipe-template").html());
+    app.onChange('recipes', this.render.bind(this));
+  }
+
+  _createClass(RecipesView, [{
+    key: 'render',
+    value: function render(recipes) {
+      var _this = this;
+
+      var $recipes = $("<div></div>");
+      recipes.forEach(function (recipe) {
+        return $recipes.append(_this.recipeTemplate(recipe));
+      });
+      this.el.html($recipes);
+    }
+  }]);
+
+  return RecipesView;
+}();
 
 exports.default = RecipesView;
 
@@ -4443,7 +4465,7 @@ var appConfig = {
   planOptions: ['two_person', 'family'],
   planTypeSelected: 'two_person',
   weekOptions: ['2016-03-21', '2016-03-28'],
-  weekSelected: '2016-03-21'
+  weekSelected: '2016_03_21'
 };
 
 $(function () {
