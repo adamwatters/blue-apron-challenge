@@ -4326,6 +4326,7 @@ var App = function () {
     this.planTypeSelected = config.planTypeSelected;
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
+    this.productPairing = null;
     this.fetching = false;
     this.recipes = [];
     this.callbacksFor = {};
@@ -4337,15 +4338,20 @@ var App = function () {
       this.updateRecipes();
     }
   }, {
-    key: 'updateRecipes',
-    value: function updateRecipes() {
+    key: 'callbackRunnerFor',
+    value: function callbackRunnerFor(prop) {
       var _this = this;
 
-      this.fetchRecipes().then(function () {
-        _this.callbacksFor.recipes.forEach(function (cb) {
-          return cb(_this.recipes);
+      return function () {
+        _this.callbacksFor[prop].forEach(function (cb) {
+          return cb(_this[prop]);
         });
-      });
+      };
+    }
+  }, {
+    key: 'updateRecipes',
+    value: function updateRecipes() {
+      this.fetchRecipes().then(this.callbackRunnerFor('recipes'));
     }
   }, {
     key: 'fetchRecipes',
@@ -4387,6 +4393,12 @@ var App = function () {
     value: function selectWeek(week) {
       this.weekSelected = week;
       this.updateRecipes();
+    }
+  }, {
+    key: 'selectProductPairing',
+    value: function selectProductPairing(productPairingId) {
+      this.productPairing = productPairingId;
+      this.callbackRunnerFor('productPairing')();
     }
   }]);
 
@@ -4447,23 +4459,69 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var ProductPairingView = function () {
+  function ProductPairingView(app) {
+    _classCallCheck(this, ProductPairingView);
+
+    this.$el = $('#product-pairing-modal');
+    this.$el.modal({ show: false });
+    app.onChange('productPairing', this.render.bind(this));
+  }
+
+  _createClass(ProductPairingView, [{
+    key: 'render',
+    value: function render(productPairing) {
+      if (productPairing) {
+        this.$el.modal('show');
+      }
+    }
+  }]);
+
+  return ProductPairingView;
+}();
+
+exports.default = ProductPairingView;
+
+},{}],5:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var RecipesView = function () {
   function RecipesView(app) {
     _classCallCheck(this, RecipesView);
 
     this.el = $('#recipes');
     this.recipeTemplate = Handlebars.compile($("#recipe-template").html());
+    this.productPairingButtonTemplate = Handlebars.compile($("#product-pairing-button-template").html());
+    this.handlePairingButtonClick = function (pairing_id) {
+      app.selectProductPairing(pairing_id);
+    };
     app.onChange('recipes', this.render.bind(this));
   }
 
   _createClass(RecipesView, [{
-    key: 'render',
+    key: "render",
     value: function render(recipes) {
       var _this = this;
 
       var $recipes = $("<div></div>");
       recipes.forEach(function (recipe) {
-        return $recipes.append(_this.recipeTemplate(recipe));
+        var $recipe = $(_this.recipeTemplate(recipe));
+        if (recipe.wine_pairing_id) {
+          var $productPairingButton = $(_this.productPairingButtonTemplate({}));
+          $productPairingButton.on('click', function () {
+            _this.handlePairingButtonClick(recipe.wine_pairing_id);
+          });
+          $recipe.append($productPairingButton);
+        }
+        $recipes.append($recipe);
       });
       this.el.html($recipes);
     }
@@ -4474,7 +4532,7 @@ var RecipesView = function () {
 
 exports.default = RecipesView;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4494,7 +4552,7 @@ var WeekSelectorView = function WeekSelectorView(app) {
 
 exports.default = WeekSelectorView;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 var _App = require('./App');
@@ -4513,6 +4571,10 @@ var _RecipesView = require('./RecipesView');
 
 var _RecipesView2 = _interopRequireDefault(_RecipesView);
 
+var _ProductPairingView = require('./ProductPairingView');
+
+var _ProductPairingView2 = _interopRequireDefault(_ProductPairingView);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var appConfig = {
@@ -4527,7 +4589,8 @@ $(function () {
   var weekSelectorView = new _WeekSelectorView2.default(app);
   var planTypeSelectorView = new _PlanTypeSelectorView2.default(app);
   var recipesView = new _RecipesView2.default(app);
+  var productPairingView = new _ProductPairingView2.default(app);
   app.init();
 });
 
-},{"./App":2,"./PlanTypeSelectorView":3,"./RecipesView":4,"./WeekSelectorView":5}]},{},[6]);
+},{"./App":2,"./PlanTypeSelectorView":3,"./ProductPairingView":4,"./RecipesView":5,"./WeekSelectorView":6}]},{},[7]);

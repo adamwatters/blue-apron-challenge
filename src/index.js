@@ -2,6 +2,7 @@ import App from './App'
 import PlanTypeSelectorView from './PlanTypeSelectorView'
 import WeekSelectorView from './WeekSelectorView'
 import RecipesView from './RecipesView'
+import ProductPairingView from './ProductPairingView'
 
 const appConfig = {
   planOptions: ['two_person', 'family'],
@@ -15,6 +16,7 @@ $(()=>{
   const weekSelectorView = new WeekSelectorView(app)
   const planTypeSelectorView = new PlanTypeSelectorView(app)
   const recipesView = new RecipesView(app)
+  const productPairingView = new ProductPairingView(app)
   app.init()
 })
 

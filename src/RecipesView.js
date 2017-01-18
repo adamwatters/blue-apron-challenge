@@ -2,12 +2,26 @@ class RecipesView {
   constructor(app) {
     this.el = $('#recipes')
     this.recipeTemplate = Handlebars.compile($("#recipe-template").html());
+    this.productPairingButtonTemplate = Handlebars.compile($("#product-pairing-button-template").html());
+    this.handlePairingButtonClick = (pairing_id) => {
+      app.selectProductPairing(pairing_id)
+    }
     app.onChange('recipes', this.render.bind(this))
   }
 
   render(recipes) {
-    const $recipes = $("<div></div>")
-    recipes.forEach((recipe) => $recipes.append(this.recipeTemplate(recipe)))
+    let $recipes = $("<div></div>")
+    recipes.forEach((recipe) => {
+      const $recipe = $(this.recipeTemplate(recipe))
+      if (recipe.wine_pairing_id) {
+        const $productPairingButton = $(this.productPairingButtonTemplate({}))
+        $productPairingButton.on('click', () => {
+          this.handlePairingButtonClick(recipe.wine_pairing_id);
+        })
+        $recipe.append($productPairingButton)
+      }
+      $recipes.append($recipe)
+    })
     this.el.html($recipes)
   }
 

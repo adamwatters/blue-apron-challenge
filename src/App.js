@@ -6,6 +6,7 @@ class App {
     this.planTypeSelected = config.planTypeSelected;
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
+    this.productPairing = null;
     this.fetching = false;
     this.recipes = [];
     this.callbacksFor = {};
@@ -15,10 +16,14 @@ class App {
     this.updateRecipes()
   }
 
+  callbackRunnerFor(prop) {
+    return () => {
+      this.callbacksFor[prop].forEach(cb => cb(this[prop]))
+    }
+  }
+
   updateRecipes() {
-    this.fetchRecipes().then(() => {
-      this.callbacksFor.recipes.forEach(cb => cb(this.recipes))
-    })
+    this.fetchRecipes().then(this.callbackRunnerFor('recipes'))
   }
 
   fetchRecipes() {
@@ -48,6 +53,11 @@ class App {
   selectWeek(week) {
     this.weekSelected = week
     this.updateRecipes()
+  }
+
+  selectProductPairing(productPairingId) {
+    this.productPairing = productPairingId
+    this.callbackRunnerFor('productPairing')()
   }
 
 }

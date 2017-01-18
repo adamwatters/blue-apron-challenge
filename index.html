@@ -45,19 +45,63 @@
   </div>
 
   <script id="recipe-template" type="text/x-handlebars-template">
-    <div class="col-md-4">
-      <div class="recipe">
-        <img class="recipe__img" src="{{square_hi_res_image_url}}" alt="{{title}}">
-        <div class="recipe__description">
-          <h2 class="recipe__title">{{title}}</h2>
-          <h3 class="recipe__subtitle">{{subtitle}}</h3>
-        </div>
-        <button class="btn btn-default">
-          <img class="icon-wine mr-5" src="../assets/images/icon-wine.png" alt=""> View Wine Pairing
-        </button>
+    <div class="recipe col-md-4">
+      <img class="recipe__img" src="{{square_hi_res_image_url}}" alt="{{title}}">
+      <div class="recipe__description">
+        <h2 class="recipe__title">{{title}}</h2>
+        <h3 class="recipe__subtitle">{{subtitle}}</h3>
       </div>
     </div>
   </script>
+
+  <script id="product-pairing-button-template" type="text/x-handlebars-template">
+    <button class="btn btn-default">
+      <img class="icon-wine mr-5" src="../assets/images/icon-wine.png" alt="wine-icon"> View Wine Pairing
+    </button>
+  </script>
+
+  <script id="wine-modal-template" type="text/x-handlebars-template">
+    <div class="wine">
+      <h2 class="wine__title text-center">
+        <img class="mr-10" src="../assets/images/icon-wine-lg.png" alt="">
+        {{name}} {{varietals_name}} {{year}}
+      </h2>
+
+      <div class="row">
+        <div class="col-md-4 text-center">
+          <img class="mr-10" src="{{image_url}}" alt="{{image_alt_text}}">
+        </div>
+
+        <div class="col-md-8">
+          <h4>Description</h4>
+          <p>{{description}}</p>
+
+          <div class="fun-fact">
+            <h4 class="fun-fact__title">Fun Fact</h4>
+            <p>{{fun_fact}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </script>
+
+    <!-- Modal -->
+  <div class="modal fade" id="product-pairing-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+        </div>
+        <div class="modal-body">
+          ...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="assets/_defaults/js/jquery-1.12.1.min.js"></script>
   <script src="assets/_defaults/js/bootstrap.min.js"></script>
