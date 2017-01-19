@@ -1,3 +1,5 @@
+import moment from 'moment'
+
 class RecipesView {
   constructor(app) {
     this.loadingIndicator = $('#recipes_loading-indicator')
@@ -22,7 +24,7 @@ class RecipesView {
   }
 
   renderRecipes(props) {
-    const $recipes = $('<span></span>')
+    const $recipes = $('<div class="recipe-group"></div>')
     const $rows = []
     props.recipes.forEach((recipe, index) => {
 
@@ -46,6 +48,16 @@ class RecipesView {
 
       $rows[$rows.length -1].append($recipe)
     })
+
+    const planTypeDisplayNames = {
+      two_person: 'Two Person Plan',
+      family: 'Family Plan'
+    }
+
+    const displayWeek = moment(props.weekSelected).format('MMMM Do');
+    const displayPlanType = planTypeDisplayNames[props.planTypeSelected]
+
+    $recipes.append(`<h1 class="page-title">${displayPlanType} for the Week of ${displayWeek}</h1>`)
 
     $rows.forEach($row => $recipes.append($row))
 
