@@ -8,9 +8,9 @@ class PlanTypeSelectorView {
     app.onChange('planTypeSelected', this.render.bind(this))
   }
 
-  render(planTypeSelected) {
+  render(props) {
     this.$selectors.each((i, element) => {
-      if(element.dataset.planSelect === planTypeSelected) {
+      if(element.dataset.planSelect === props.planTypeSelected) {
         $(element).addClass('active')
       } else {
         $(element).removeClass('active')

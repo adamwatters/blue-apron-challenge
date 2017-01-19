@@ -6,9 +6,10 @@ class App {
     this.planTypeSelected = config.planTypeSelected;
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
-    this.productPairing = null;
+    this.productPairingId = null;
     this.fetching = false;
     this.recipes = [];
+    this.productPairings = {};
     this.callbacksFor = {};
   }
 
@@ -18,12 +19,14 @@ class App {
 
   callbackRunnerFor(prop) {
     return () => {
-      this.callbacksFor[prop].forEach(cb => cb(this[prop]))
+      this.callbacksFor[prop].forEach(cb => cb(this))
     }
   }
 
   updateRecipes() {
-    this.fetchRecipes().then(this.callbackRunnerFor('recipes'))
+    this.fetchRecipes()
+        .then(this.callbackRunnerFor('recipes'))
+        .then(this.fetchProductPairings.bind(this))
   }
 
   fetchRecipes() {
@@ -36,6 +39,19 @@ class App {
     })
   }
 
+  fetchProductPairings() {
+    const productPairings = {};
+    const productPairingRequests = this.recipes.filter(recipe => recipe.wine_pairing_id).map(recipe => {
+      return $.getJSON(`/api/product_pairings/${recipe.wine_pairing_id}`)
+    })
+    Promise.all(productPairingRequests).then(responses => {
+      responses.forEach(response => {
+        productPairings[response.product_pairings[0].paired_product.id] = response.product_pairings[0].paired_product.producible.wine
+      })
+    })
+    this.productPairings = productPairings;
+  }
+
   onChange(attribute, callback) {
     if(this.callbacksFor.hasOwnProperty(attribute)) {
       this.callbacksFor[attribute].push(callback)
@@ -46,7 +62,7 @@ class App {
 
   selectPlanType(planType) {
     this.planTypeSelected = planType
-    this.callbacksFor.planTypeSelected.forEach(cb => cb(this.planTypeSelected))
+    this.callbackRunnerFor('planTypeSelected')()
     this.updateRecipes()
   }
 
@@ -55,9 +71,14 @@ class App {
     this.updateRecipes()
   }
 
-  selectProductPairing(productPairingId) {
-    this.productPairing = productPairingId
-    this.callbackRunnerFor('productPairing')()
+  selectProductPairingId(productPairingId) {
+    this.productPairingId = productPairingId
+    this.callbackRunnerFor('productPairingId')()
+  }
+
+  clearProductPairingId() {
+    this.productPairingId = null
+    this.callbackRunnerFor('productPairingId')()
   }
 
 }

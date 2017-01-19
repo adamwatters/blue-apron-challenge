@@ -4,14 +4,14 @@ class RecipesView {
     this.recipeTemplate = Handlebars.compile($("#recipe-template").html());
     this.productPairingButtonTemplate = Handlebars.compile($("#product-pairing-button-template").html());
     this.handlePairingButtonClick = (pairing_id) => {
-      app.selectProductPairing(pairing_id)
+      app.selectProductPairingId(pairing_id)
     }
     app.onChange('recipes', this.render.bind(this))
   }
 
-  render(recipes) {
-    let $recipes = $("<div></div>")
-    recipes.forEach((recipe) => {
+  render(props) {
+    const $recipes = $("<div></div>")
+    props.recipes.forEach((recipe) => {
       const $recipe = $(this.recipeTemplate(recipe))
       if (recipe.wine_pairing_id) {
         const $productPairingButton = $(this.productPairingButtonTemplate({}))
