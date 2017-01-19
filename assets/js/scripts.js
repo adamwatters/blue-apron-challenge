@@ -4546,8 +4546,10 @@ var RecipesView = function () {
     value: function render(props) {
       var _this = this;
 
-      var $recipes = $("<div></div>");
-      props.recipes.forEach(function (recipe) {
+      var $recipes = $("<span></span>");
+      var $rows = [];
+      props.recipes.forEach(function (recipe, index) {
+
         var $recipe = $(_this.recipeTemplate(recipe));
         if (recipe.wine_pairing_id) {
           var $productPairingButton = $(_this.productPairingButtonTemplate({}));
@@ -4556,8 +4558,18 @@ var RecipesView = function () {
           });
           $recipe.append($productPairingButton);
         }
-        $recipes.append($recipe);
+
+        if (index % 3 === 0) {
+          $rows.push($("<div class='row'></div>"));
+        }
+
+        $rows[$rows.length - 1].append($recipe);
       });
+
+      $rows.forEach(function ($row) {
+        return $recipes.append($row);
+      });
+
       this.el.html($recipes);
     }
   }]);

@@ -10,8 +10,10 @@ class RecipesView {
   }
 
   render(props) {
-    const $recipes = $("<div></div>")
-    props.recipes.forEach((recipe) => {
+    const $recipes = $("<span></span>")
+    const $rows = []
+    props.recipes.forEach((recipe, index) => {
+
       const $recipe = $(this.recipeTemplate(recipe))
       if (recipe.wine_pairing_id) {
         const $productPairingButton = $(this.productPairingButtonTemplate({}))
@@ -20,8 +22,16 @@ class RecipesView {
         })
         $recipe.append($productPairingButton)
       }
-      $recipes.append($recipe)
+
+      if (index % 3 === 0) {
+        $rows.push($("<div class='row'></div>"))
+      }
+
+      $rows[$rows.length -1].append($recipe)
     })
+
+    $rows.forEach($row => $recipes.append($row))
+
     this.el.html($recipes)
   }
 
