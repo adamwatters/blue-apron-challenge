@@ -1,3 +1,8 @@
 .recipe {
   padding-bottom: 30px;
 }
+
+.recipes_loading-indicator {
+  display: none;
+  margin: auto;
+}

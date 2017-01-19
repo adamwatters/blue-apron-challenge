@@ -30,11 +30,11 @@ class App {
   }
 
   fetchRecipes() {
-    this.fetching = true
+    this.setFetching(true)
     const urlWeek = moment(this.weekSelected).format('YYYY_MM_DD')
     const urlPlan = this.planTypeSelected
     return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(response => {
-      this.fetching = false;
+      this.setFetching(false)
       this.recipes = response[`${this.planTypeSelected}_plan`].recipes.map((r) => r.recipe)
     })
   }
@@ -58,6 +58,11 @@ class App {
     } else {
       this.callbacksFor[attribute] = [callback]
     }
+  }
+
+  setFetching(bool) {
+    this.fetching = bool
+    this.callbackRunnerFor('fetching')()
   }
 
   selectPlanType(planType) {

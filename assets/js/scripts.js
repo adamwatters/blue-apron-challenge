@@ -4359,11 +4359,11 @@ var App = function () {
     value: function fetchRecipes() {
       var _this2 = this;
 
-      this.fetching = true;
+      this.setFetching(true);
       var urlWeek = (0, _moment2.default)(this.weekSelected).format('YYYY_MM_DD');
       var urlPlan = this.planTypeSelected;
       return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(function (response) {
-        _this2.fetching = false;
+        _this2.setFetching(false);
         _this2.recipes = response[_this2.planTypeSelected + '_plan'].recipes.map(function (r) {
           return r.recipe;
         });
@@ -4393,6 +4393,12 @@ var App = function () {
       } else {
         this.callbacksFor[attribute] = [callback];
       }
+    }
+  }, {
+    key: 'setFetching',
+    value: function setFetching(bool) {
+      this.fetching = bool;
+      this.callbackRunnerFor('fetching')();
     }
   }, {
     key: 'selectPlanType',
@@ -4518,7 +4524,7 @@ var ProductPairingView = function () {
 exports.default = ProductPairingView;
 
 },{}],5:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -4532,35 +4538,54 @@ var RecipesView = function () {
   function RecipesView(app) {
     _classCallCheck(this, RecipesView);
 
-    this.el = $('#recipes');
-    this.recipeTemplate = Handlebars.compile($("#recipe-template").html());
-    this.productPairingButtonTemplate = Handlebars.compile($("#product-pairing-button-template").html());
+    this.loadingIndicator = $('#recipes_loading-indicator');
+    this.$recipesContainer = $('#recipes-container');
+    this.recipeTemplate = Handlebars.compile($('#recipe-template').html());
+    this.productPairingButtonTemplate = Handlebars.compile($('#product-pairing-button-template').html());
     this.handlePairingButtonClick = function (pairing_id) {
       app.selectProductPairingId(pairing_id);
     };
     app.onChange('recipes', this.render.bind(this));
+    app.onChange('fetching', this.render.bind(this));
   }
 
   _createClass(RecipesView, [{
-    key: "render",
+    key: 'render',
     value: function render(props) {
+      if (props.fetching) {
+        console.log('fetching');
+        this.$recipesContainer.html('');
+        this.loadingIndicator.css('display', 'block');
+      } else {
+        this.loadingIndicator.css('display', 'none');
+        this.renderRecipes(props);
+      }
+    }
+  }, {
+    key: 'renderRecipes',
+    value: function renderRecipes(props) {
       var _this = this;
 
-      var $recipes = $("<span></span>");
+      var $recipes = $('<span></span>');
       var $rows = [];
       props.recipes.forEach(function (recipe, index) {
 
         var $recipe = $(_this.recipeTemplate(recipe));
+
         if (recipe.wine_pairing_id) {
           var $productPairingButton = $(_this.productPairingButtonTemplate({}));
           $productPairingButton.on('click', function () {
             _this.handlePairingButtonClick(recipe.wine_pairing_id);
           });
-          $recipe.append($productPairingButton);
+          $recipe.find('.recipe').append($productPairingButton);
+        }
+
+        if (recipe.vegetarian) {
+          $recipe.find('.recipe').prepend('<i class="icon-veg"></i>');
         }
 
         if (index % 3 === 0) {
-          $rows.push($("<div class='row'></div>"));
+          $rows.push($('<div class="row"></div>'));
         }
 
         $rows[$rows.length - 1].append($recipe);
@@ -4570,7 +4595,7 @@ var RecipesView = function () {
         return $recipes.append($row);
       });
 
-      this.el.html($recipes);
+      this.$recipesContainer.html($recipes);
     }
   }]);
 
