@@ -4327,6 +4327,7 @@ var App = function () {
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
     this.productPairingId = null;
+    this.mostRecentRequest = null;
     this.fetching = false;
     this.recipes = [];
     this.productPairings = {};
@@ -4352,7 +4353,7 @@ var App = function () {
   }, {
     key: 'updateRecipes',
     value: function updateRecipes() {
-      this.fetchRecipes().then(this.callbackRunnerFor('recipes')).then(this.fetchProductPairings.bind(this));
+      this.fetchRecipes().then(this.fetchProductPairings.bind(this));
     }
   }, {
     key: 'fetchRecipes',
@@ -4364,9 +4365,9 @@ var App = function () {
       var urlPlan = this.planTypeSelected;
       return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(function (response) {
         _this2.setFetching(false);
-        _this2.recipes = response[_this2.planTypeSelected + '_plan'].recipes.map(function (r) {
+        _this2.setRecipes(response[_this2.planTypeSelected + '_plan'].recipes.map(function (r) {
           return r.recipe;
-        });
+        }));
       });
     }
   }, {
@@ -4393,6 +4394,12 @@ var App = function () {
       } else {
         this.callbacksFor[attribute] = [callback];
       }
+    }
+  }, {
+    key: 'setRecipes',
+    value: function setRecipes(recipes) {
+      this.recipes = recipes;
+      this.callbackRunnerFor('recipes')();
     }
   }, {
     key: 'setFetching',
@@ -4553,7 +4560,6 @@ var RecipesView = function () {
     key: 'render',
     value: function render(props) {
       if (props.fetching) {
-        console.log('fetching');
         this.$recipesContainer.html('');
         this.loadingIndicator.css('display', 'block');
       } else {

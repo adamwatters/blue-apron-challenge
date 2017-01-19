@@ -13,7 +13,6 @@ class RecipesView {
 
   render(props) {
     if (props.fetching) {
-      console.log('fetching')
       this.$recipesContainer.html('')
       this.loadingIndicator.css('display', 'block')
     } else {

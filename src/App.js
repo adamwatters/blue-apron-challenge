@@ -7,6 +7,7 @@ class App {
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
     this.productPairingId = null;
+    this.mostRecentRequest = null;
     this.fetching = false;
     this.recipes = [];
     this.productPairings = {};
@@ -24,9 +25,7 @@ class App {
   }
 
   updateRecipes() {
-    this.fetchRecipes()
-        .then(this.callbackRunnerFor('recipes'))
-        .then(this.fetchProductPairings.bind(this))
+    this.fetchRecipes().then(this.fetchProductPairings.bind(this))
   }
 
   fetchRecipes() {
@@ -35,7 +34,7 @@ class App {
     const urlPlan = this.planTypeSelected
     return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(response => {
       this.setFetching(false)
-      this.recipes = response[`${this.planTypeSelected}_plan`].recipes.map((r) => r.recipe)
+      this.setRecipes(response[`${this.planTypeSelected}_plan`].recipes.map((r) => r.recipe))
     })
   }
 
@@ -58,6 +57,11 @@ class App {
     } else {
       this.callbacksFor[attribute] = [callback]
     }
+  }
+
+  setRecipes(recipes) {
+    this.recipes = recipes
+    this.callbackRunnerFor('recipes')()
   }
 
   setFetching(bool) {
