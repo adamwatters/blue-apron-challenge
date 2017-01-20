@@ -4327,7 +4327,7 @@ var App = function () {
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
     this.productPairingId = null;
-    this.mostRecentRequest = null;
+    this.mostRecentRequestAt = null;
     this.fetching = false;
     this.recipes = [];
     this.productPairings = {};
@@ -4358,17 +4358,26 @@ var App = function () {
   }, {
     key: 'fetchRecipes',
     value: function fetchRecipes() {
-      var _this2 = this;
-
       this.setFetching(true);
       var urlWeek = (0, _moment2.default)(this.weekSelected).format('YYYY_MM_DD');
       var urlPlan = this.planTypeSelected;
-      return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(function (response) {
-        _this2.setFetching(false);
-        _this2.setRecipes(response[_this2.planTypeSelected + '_plan'].recipes.map(function (r) {
+      var requestTimeStamp = (0, _moment2.default)().format();
+      var requestState = {
+        timeStamp: requestTimeStamp,
+        planTypeSelected: this.planTypeSelected
+      };
+      this.setMostRecentRequestAt(requestTimeStamp);
+      return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(this.handleResponse.bind(this, requestState));
+    }
+  }, {
+    key: 'handleResponse',
+    value: function handleResponse(requestState, response) {
+      if (requestState.timeStamp === this.mostRecentRequestAt) {
+        this.setFetching(false);
+        this.setRecipes(response[requestState.planTypeSelected + '_plan'].recipes.map(function (r) {
           return r.recipe;
         }));
-      });
+      }
     }
   }, {
     key: 'fetchProductPairings',
@@ -4400,6 +4409,11 @@ var App = function () {
     value: function setRecipes(recipes) {
       this.recipes = recipes;
       this.callbackRunnerFor('recipes')();
+    }
+  }, {
+    key: 'setMostRecentRequestAt',
+    value: function setMostRecentRequestAt(moment) {
+      this.mostRecentRequestAt = moment;
     }
   }, {
     key: 'setFetching',

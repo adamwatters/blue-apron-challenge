@@ -7,7 +7,7 @@ class App {
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
     this.productPairingId = null;
-    this.mostRecentRequest = null;
+    this.mostRecentRequestAt = null;
     this.fetching = false;
     this.recipes = [];
     this.productPairings = {};
@@ -32,10 +32,20 @@ class App {
     this.setFetching(true)
     const urlWeek = moment(this.weekSelected).format('YYYY_MM_DD')
     const urlPlan = this.planTypeSelected
-    return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(response => {
+    const requestTimeStamp = moment().format()
+    const requestState = {
+      timeStamp: requestTimeStamp,
+      planTypeSelected: this.planTypeSelected
+    }
+    this.setMostRecentRequestAt(requestTimeStamp)
+    return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(this.handleResponse.bind(this, requestState))
+  }
+
+  handleResponse(requestState, response) {
+    if (requestState.timeStamp === this.mostRecentRequestAt) {
       this.setFetching(false)
-      this.setRecipes(response[`${this.planTypeSelected}_plan`].recipes.map((r) => r.recipe))
-    })
+      this.setRecipes(response[`${requestState.planTypeSelected}_plan`].recipes.map((r) => r.recipe))
+    }
   }
 
   fetchProductPairings() {
@@ -62,6 +72,10 @@ class App {
   setRecipes(recipes) {
     this.recipes = recipes
     this.callbackRunnerFor('recipes')()
+  }
+
+  setMostRecentRequestAt(moment) {
+    this.mostRecentRequestAt = moment;
   }
 
   setFetching(bool) {
