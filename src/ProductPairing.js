@@ -2,13 +2,15 @@ class ProductPairing {
   constructor(id) {
     this.id = id
     this.product = null
-    this.fetching = false
+    this.fetching = false //this shouldn't be initialized as true
     this.callbacksFor = {};
   }
 
   callbackRunnerFor(prop) {
     return () => {
-      this.callbacksFor[prop].forEach(cb => cb(this))
+      if (this.callbacksFor[prop]) {
+        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
+      }
     }
   }
 
@@ -23,6 +25,7 @@ class ProductPairing {
 
   setFetching(bool) {
     this.fetching = bool
+    this.callbackRunnerFor('fetching')()
   }
 
   onChange(attribute, callback) {

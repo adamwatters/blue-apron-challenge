@@ -4336,7 +4336,7 @@ var App = function () {
   _createClass(App, [{
     key: 'init',
     value: function init() {
-      this.updateRecipes();
+      this.fetchRecipes();
     }
   }, {
     key: 'callbackRunnerFor',
@@ -4344,24 +4344,12 @@ var App = function () {
       var _this = this;
 
       return function () {
-        _this.callbacksFor[prop].forEach(function (cb) {
-          return cb(_this);
-        });
+        if (_this.callbacksFor[prop]) {
+          _this.callbacksFor[prop].forEach(function (cb) {
+            return cb(Object.assign({}, _this));
+          });
+        }
       };
-    }
-  }, {
-    key: 'updateRecipes',
-    value: function updateRecipes() {
-      var _this2 = this;
-
-      this.fetchRecipes().then(function () {
-        var productPairingIds = _this2.recipes.filter(function (recipe) {
-          return recipe.wine_pairing_id;
-        }).map(function (recipe) {
-          return recipe.wine_pairing_id;
-        });
-        _this2.productPairings.fetch(productPairingIds);
-      });
     }
   }, {
     key: 'fetchRecipes',
@@ -4381,10 +4369,17 @@ var App = function () {
     key: 'handleRecipesResponse',
     value: function handleRecipesResponse(requestState, response) {
       if (requestState.timeStamp === this.mostRecentRequestAt) {
-        this.setFetchingRecipes(false);
-        this.setRecipes(response[requestState.planTypeSelected + '_plan'].recipes.map(function (r) {
+        var recipes = response[requestState.planTypeSelected + '_plan'].recipes.map(function (r) {
           return r.recipe;
-        }));
+        });
+        var productPairingIds = recipes.filter(function (recipe) {
+          return recipe.wine_pairing_id;
+        }).map(function (recipe) {
+          return recipe.wine_pairing_id;
+        });
+        this.productPairings.createFor(productPairingIds);
+        this.setFetchingRecipes(false);
+        this.setRecipes(recipes);
       }
     }
   }, {
@@ -4403,6 +4398,12 @@ var App = function () {
       this.callbackRunnerFor('recipes')();
     }
   }, {
+    key: 'clearRecipes',
+    value: function clearRecipes() {
+      this.recipes = [];
+      this.callbackRunnerFor('recipes')();
+    }
+  }, {
     key: 'setMostRecentRequestAt',
     value: function setMostRecentRequestAt(moment) {
       this.mostRecentRequestAt = moment;
@@ -4418,13 +4419,15 @@ var App = function () {
     value: function selectPlanType(planType) {
       this.planTypeSelected = planType;
       this.callbackRunnerFor('planTypeSelected')();
-      this.updateRecipes();
+      this.clearRecipes();
+      this.fetchRecipes();
     }
   }, {
     key: 'selectWeek',
     value: function selectWeek(week) {
       this.weekSelected = week;
-      this.updateRecipes();
+      this.clearRecipes();
+      this.fetchRecipes();
     }
   }]);
 
@@ -4475,7 +4478,7 @@ var PlanTypeSelectorView = function () {
 exports.default = PlanTypeSelectorView;
 
 },{}],4:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -4491,40 +4494,43 @@ var ProductPairing = function () {
 
     this.id = id;
     this.product = null;
-    this.fetching = false;
+    this.fetching = false; //this shouldn't be initialized as true
     this.callbacksFor = {};
   }
 
   _createClass(ProductPairing, [{
-    key: "callbackRunnerFor",
+    key: 'callbackRunnerFor',
     value: function callbackRunnerFor(prop) {
       var _this = this;
 
       return function () {
-        _this.callbacksFor[prop].forEach(function (cb) {
-          return cb(_this);
-        });
+        if (_this.callbacksFor[prop]) {
+          _this.callbacksFor[prop].forEach(function (cb) {
+            return cb(Object.assign({}, _this));
+          });
+        }
       };
     }
   }, {
-    key: "fetch",
+    key: 'fetch',
     value: function fetch() {
       var _this2 = this;
 
       this.setFetching(true);
-      return $.getJSON("/api/product_pairings/" + this.id).then(function (response) {
+      return $.getJSON('/api/product_pairings/' + this.id).then(function (response) {
         var id = response.product_pairings[0].paired_product.id;
         _this2.product = response.product_pairings[0].paired_product.producible.wine;
         _this2.setFetching(false);
       });
     }
   }, {
-    key: "setFetching",
+    key: 'setFetching',
     value: function setFetching(bool) {
       this.fetching = bool;
+      this.callbackRunnerFor('fetching')();
     }
   }, {
-    key: "onChange",
+    key: 'onChange',
     value: function onChange(attribute, callback) {
       if (this.callbacksFor.hasOwnProperty(attribute)) {
         this.callbacksFor[attribute].push(callback);
@@ -4540,6 +4546,59 @@ var ProductPairing = function () {
 exports.default = ProductPairing;
 
 },{}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var buttonTemplate = Handlebars.compile($('#product-pairing-button-template').html());
+
+var ProductPairingButtonView = function () {
+  function ProductPairingButtonView(productPairing, app) {
+    var _this = this;
+
+    _classCallCheck(this, ProductPairingButtonView);
+
+    this.disabled = productPairing.fetching;
+    this.$button = $(buttonTemplate({
+      content: productPairing.fetching ? 'fetching...' : 'View Wine Pairing',
+      disabled: productPairing.fetching ? 'disabled' : ''
+    }));
+    this.$button.on('click', function () {
+      if (!_this.disabled) {
+        app.productPairings.setActiveProductPairing(productPairing.id);
+      }
+    });
+    productPairing.onChange('fetching', this.render.bind(this));
+  }
+
+  _createClass(ProductPairingButtonView, [{
+    key: 'build',
+    value: function build() {
+      return this.$button;
+    }
+  }, {
+    key: 'render',
+    value: function render(props) {
+      var $content = this.$button.find('#product-pairing-button-content');
+      if (!props.fetching) {
+        $content.html('View Wine Pairing');
+        this.$button.removeAttr('disabled');
+      }
+    }
+  }]);
+
+  return ProductPairingButtonView;
+}();
+
+exports.default = ProductPairingButtonView;
+
+},{}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4589,7 +4648,7 @@ var ProductPairingView = function () {
 
 exports.default = ProductPairingView;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4621,10 +4680,17 @@ var ProductPairings = function () {
       var _this = this;
 
       return function () {
-        _this.callbacksFor[prop].forEach(function (cb) {
-          return cb(_this);
-        });
+        if (_this.callbacksFor[prop]) {
+          _this.callbacksFor[prop].forEach(function (cb) {
+            return cb(Object.assign({}, _this));
+          });
+        }
       };
+    }
+  }, {
+    key: 'createFor',
+    value: function createFor(ids) {
+      this.fetch(ids);
     }
   }, {
     key: 'fetch',
@@ -4637,6 +4703,11 @@ var ProductPairings = function () {
           _this2.productPairings[id].fetch();
         }
       });
+    }
+  }, {
+    key: 'getById',
+    value: function getById(id) {
+      return this.productPairings[id];
     }
   }, {
     key: 'setActiveProductPairing',
@@ -4666,7 +4737,7 @@ var ProductPairings = function () {
 
 exports.default = ProductPairings;
 
-},{"./ProductPairing":4}],7:[function(require,module,exports){
+},{"./ProductPairing":4}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4679,6 +4750,10 @@ var _moment = require('moment');
 
 var _moment2 = _interopRequireDefault(_moment);
 
+var _ProductPairingButtonView = require('./ProductPairingButtonView');
+
+var _ProductPairingButtonView2 = _interopRequireDefault(_ProductPairingButtonView);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -4690,10 +4765,6 @@ var RecipesView = function () {
     this.loadingIndicator = $('#recipes_loading-indicator');
     this.$recipesContainer = $('#recipes-container');
     this.recipeTemplate = Handlebars.compile($('#recipe-template').html());
-    this.productPairingButtonTemplate = Handlebars.compile($('#product-pairing-button-template').html());
-    this.handlePairingButtonClick = function (pairing_id) {
-      app.productPairings.setActiveProductPairing(pairing_id);
-    };
     app.onChange('recipes', this.render.bind(this));
     app.onChange('fetchingRecipes', this.render.bind(this));
   }
@@ -4704,7 +4775,7 @@ var RecipesView = function () {
       if (props.fetchingRecipes) {
         this.$recipesContainer.html('');
         this.loadingIndicator.css('display', 'block');
-      } else {
+      } else if (props.recipes.length > 0) {
         this.loadingIndicator.css('display', 'none');
         this.renderRecipes(props);
       }
@@ -4721,10 +4792,9 @@ var RecipesView = function () {
         var $recipe = $(_this.recipeTemplate(recipe));
 
         if (recipe.wine_pairing_id) {
-          var $productPairingButton = $(_this.productPairingButtonTemplate({}));
-          $productPairingButton.on('click', function () {
-            _this.handlePairingButtonClick(recipe.wine_pairing_id);
-          });
+          var productPairing = props.productPairings.getById(recipe.wine_pairing_id);
+          var productPairingView = new _ProductPairingButtonView2.default(productPairing, props);
+          var $productPairingButton = productPairingView.build();
           $recipe.find('.recipe').append($productPairingButton);
         }
 
@@ -4762,7 +4832,7 @@ var RecipesView = function () {
 
 exports.default = RecipesView;
 
-},{"moment":1}],8:[function(require,module,exports){
+},{"./ProductPairingButtonView":5,"moment":1}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4782,7 +4852,7 @@ var WeekSelectorView = function WeekSelectorView(app) {
 
 exports.default = WeekSelectorView;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 var _App = require('./App');
@@ -4832,4 +4902,4 @@ $(function () {
   app.init();
 });
 
-},{"./App":2,"./PlanTypeSelectorView":3,"./ProductPairingView":5,"./ProductPairings":6,"./RecipesView":7,"./WeekSelectorView":8}]},{},[9]);
+},{"./App":2,"./PlanTypeSelectorView":3,"./ProductPairingView":6,"./ProductPairings":7,"./RecipesView":8,"./WeekSelectorView":9}]},{},[10]);

@@ -53,8 +53,9 @@
   </script>
 
   <script id="product-pairing-button-template" type="text/x-handlebars-template">
-    <button class="btn btn-default">
-      <img class="icon-wine mr-5" src="../assets/images/icon-wine.png" alt="wine-icon"> View Wine Pairing
+    <button class="btn btn-default {{disabled}}">
+      <img class="icon-wine mr-5" src="../assets/images/icon-wine.png" alt="wine-icon">
+      <span id='product-pairing-button-content'>{{content}}</span>
     </button>
   </script>
 
