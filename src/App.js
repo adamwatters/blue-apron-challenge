@@ -1,17 +1,16 @@
 import moment from 'moment'
 
 class App {
-  constructor(config) {
-    this.planOptions = config.planOptions;
-    this.planTypeSelected = config.planTypeSelected;
-    this.weekOptions = config.weekOptions;
-    this.weekSelected = config.weekSelected;
-    this.productPairingId = null;
-    this.mostRecentRequestAt = null;
-    this.fetchingRecipes = false;
-    this.recipes = [];
-    this.productPairings = {};
-    this.callbacksFor = {};
+  constructor(config, models) {
+    this.planOptions = config.planOptions
+    this.planTypeSelected = config.planTypeSelected
+    this.weekOptions = config.weekOptions
+    this.weekSelected = config.weekSelected
+    this.mostRecentRequestAt = null
+    this.fetchingRecipes = false
+    this.recipes = []
+    this.productPairings = models.productPairings
+    this.callbacksFor = {}
   }
 
   init() {
@@ -25,7 +24,11 @@ class App {
   }
 
   updateRecipes() {
-    this.fetchRecipes().then(this.fetchProductPairings.bind(this))
+    this.fetchRecipes().then(() => {
+      const productPairingIds = this.recipes.filter(recipe => recipe.wine_pairing_id)
+                                            .map(recipe => recipe.wine_pairing_id)
+      this.productPairings.fetch(productPairingIds)
+    })
   }
 
   fetchRecipes() {
@@ -45,26 +48,6 @@ class App {
     if (requestState.timeStamp === this.mostRecentRequestAt) {
       this.setFetchingRecipes(false)
       this.setRecipes(response[`${requestState.planTypeSelected}_plan`].recipes.map((r) => r.recipe))
-    }
-  }
-
-  fetchProductPairings() {
-    const productPairingRequests = this.recipes.filter(recipe => recipe.wine_pairing_id).map(recipe => {
-      if (!this.productPairings[recipe.wine_pairing_id]) {
-        return $.getJSON(`/api/product_pairings/${recipe.wine_pairing_id}`)
-      } else {
-        return Promise.resolve(null)
-      }
-    })
-    productPairingRequests.forEach(request => {
-      request.then(this.handleProductPairingResponse.bind(this))
-    })
-  }
-
-  handleProductPairingResponse(response) {
-    if (response){
-      const id = response.product_pairings[0].paired_product.id
-      this.productPairings[id] = response.product_pairings[0].paired_product.producible.wine
     }
   }
 
@@ -99,16 +82,6 @@ class App {
   selectWeek(week) {
     this.weekSelected = week
     this.updateRecipes()
-  }
-
-  selectProductPairingId(productPairingId) {
-    this.productPairingId = productPairingId
-    this.callbackRunnerFor('productPairingId')()
-  }
-
-  clearProductPairingId() {
-    this.productPairingId = null
-    this.callbackRunnerFor('productPairingId')()
   }
 
 }

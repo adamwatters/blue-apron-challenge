@@ -3,18 +3,18 @@ class ProductPairingView {
     this.$modal = $('#product-pairing-modal')
     this.$modal.modal({ show: false})
     $('[data-close-modal]').on('click', () => {
-      app.clearProductPairingId()
+      app.productPairings.clearActiveProductPairing()
     })
     this.$modalBody = $('#product-pairing-modal-body')
     this.wineModalTemplate = Handlebars.compile($("#wine-modal-template").html());
     this.$modalHeaderContent = $('#wine-modal-header-content')
     this.headerContentTemplate = Handlebars.compile($("#wine-modal-header-content-template").html());
-    app.onChange('productPairingId', this.render.bind(this))
+    app.productPairings.onChange('active', this.render.bind(this))
   }
 
   render(props) {
-    if(props.productPairingId) {
-      this.fillAndShowModal(props.productPairings[props.productPairingId])
+    if(props.active) {
+      this.fillAndShowModal(props.productPairings[props.active].product)
     } else {
       this.$modal.modal('hide')
     }

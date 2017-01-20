@@ -7,7 +7,7 @@ class RecipesView {
     this.recipeTemplate = Handlebars.compile($('#recipe-template').html());
     this.productPairingButtonTemplate = Handlebars.compile($('#product-pairing-button-template').html());
     this.handlePairingButtonClick = (pairing_id) => {
-      app.selectProductPairingId(pairing_id)
+      app.productPairings.setActiveProductPairing(pairing_id)
     }
     app.onChange('recipes', this.render.bind(this))
     app.onChange('fetchingRecipes', this.render.bind(this))

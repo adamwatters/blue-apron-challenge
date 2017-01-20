@@ -1,4 +1,6 @@
 import App from './App'
+import ProductPairings from './ProductPairings'
+
 import PlanTypeSelectorView from './PlanTypeSelectorView'
 import WeekSelectorView from './WeekSelectorView'
 import RecipesView from './RecipesView'
@@ -11,8 +13,13 @@ const appConfig = {
   weekSelected: '2016-03-21',
 }
 
+const models = {
+  productPairings: new ProductPairings()
+}
+
+const app = new App(appConfig, models)
+
 $(()=>{
-  const app = new App(appConfig)
   const weekSelectorView = new WeekSelectorView(app)
   const planTypeSelectorView = new PlanTypeSelectorView(app)
   const recipesView = new RecipesView(app)
