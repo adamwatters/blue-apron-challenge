@@ -3,6 +3,8 @@ $.mockjaxSettings.type = "GET";
 $.mockjaxSettings.status = 200;
 $.mockjaxSettings.responseTime = [500, 1250];
 
+$.mockjaxSettings.log = () => {};
+
 $.mockjax({
   url: "/api/recipes/two_person/2016_03_21",
   proxy: "assets/_defaults/js/mocks/recipes/two_person/2016-03-21.json"

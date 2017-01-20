@@ -1,14 +1,14 @@
 import moment from 'moment'
 
 class App {
-  constructor(config, recipesView) {
+  constructor(config) {
     this.planOptions = config.planOptions;
     this.planTypeSelected = config.planTypeSelected;
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
     this.productPairingId = null;
     this.mostRecentRequestAt = null;
-    this.fetching = false;
+    this.fetchingRecipes = false;
     this.recipes = [];
     this.productPairings = {};
     this.callbacksFor = {};
@@ -29,7 +29,7 @@ class App {
   }
 
   fetchRecipes() {
-    this.setFetching(true)
+    this.setFetchingRecipes(true)
     const urlWeek = moment(this.weekSelected).format('YYYY_MM_DD')
     const urlPlan = this.planTypeSelected
     const requestTimeStamp = moment().format()
@@ -38,27 +38,34 @@ class App {
       planTypeSelected: this.planTypeSelected
     }
     this.setMostRecentRequestAt(requestTimeStamp)
-    return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(this.handleResponse.bind(this, requestState))
+    return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(this.handleRecipesResponse.bind(this, requestState))
   }
 
-  handleResponse(requestState, response) {
+  handleRecipesResponse(requestState, response) {
     if (requestState.timeStamp === this.mostRecentRequestAt) {
-      this.setFetching(false)
+      this.setFetchingRecipes(false)
       this.setRecipes(response[`${requestState.planTypeSelected}_plan`].recipes.map((r) => r.recipe))
     }
   }
 
   fetchProductPairings() {
-    const productPairings = {};
     const productPairingRequests = this.recipes.filter(recipe => recipe.wine_pairing_id).map(recipe => {
-      return $.getJSON(`/api/product_pairings/${recipe.wine_pairing_id}`)
+      if (!this.productPairings[recipe.wine_pairing_id]) {
+        return $.getJSON(`/api/product_pairings/${recipe.wine_pairing_id}`)
+      } else {
+        return Promise.resolve(null)
+      }
     })
-    Promise.all(productPairingRequests).then(responses => {
-      responses.forEach(response => {
-        productPairings[response.product_pairings[0].paired_product.id] = response.product_pairings[0].paired_product.producible.wine
-      })
+    productPairingRequests.forEach(request => {
+      request.then(this.handleProductPairingResponse.bind(this))
     })
-    this.productPairings = productPairings;
+  }
+
+  handleProductPairingResponse(response) {
+    if (response){
+      const id = response.product_pairings[0].paired_product.id
+      this.productPairings[id] = response.product_pairings[0].paired_product.producible.wine
+    }
   }
 
   onChange(attribute, callback) {
@@ -78,9 +85,9 @@ class App {
     this.mostRecentRequestAt = moment;
   }
 
-  setFetching(bool) {
-    this.fetching = bool
-    this.callbackRunnerFor('fetching')()
+  setFetchingRecipes(bool) {
+    this.fetchingRecipes = bool
+    this.callbackRunnerFor('fetchingRecipes')()
   }
 
   selectPlanType(planType) {

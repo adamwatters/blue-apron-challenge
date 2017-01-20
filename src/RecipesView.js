@@ -10,11 +10,11 @@ class RecipesView {
       app.selectProductPairingId(pairing_id)
     }
     app.onChange('recipes', this.render.bind(this))
-    app.onChange('fetching', this.render.bind(this))
+    app.onChange('fetchingRecipes', this.render.bind(this))
   }
 
   render(props) {
-    if (props.fetching) {
+    if (props.fetchingRecipes) {
       this.$recipesContainer.html('')
       this.loadingIndicator.css('display', 'block')
     } else {

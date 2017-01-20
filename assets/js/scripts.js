@@ -4319,7 +4319,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var App = function () {
-  function App(config, recipesView) {
+  function App(config) {
     _classCallCheck(this, App);
 
     this.planOptions = config.planOptions;
@@ -4328,7 +4328,7 @@ var App = function () {
     this.weekSelected = config.weekSelected;
     this.productPairingId = null;
     this.mostRecentRequestAt = null;
-    this.fetching = false;
+    this.fetchingRecipes = false;
     this.recipes = [];
     this.productPairings = {};
     this.callbacksFor = {};
@@ -4358,7 +4358,7 @@ var App = function () {
   }, {
     key: 'fetchRecipes',
     value: function fetchRecipes() {
-      this.setFetching(true);
+      this.setFetchingRecipes(true);
       var urlWeek = (0, _moment2.default)(this.weekSelected).format('YYYY_MM_DD');
       var urlPlan = this.planTypeSelected;
       var requestTimeStamp = (0, _moment2.default)().format();
@@ -4367,13 +4367,13 @@ var App = function () {
         planTypeSelected: this.planTypeSelected
       };
       this.setMostRecentRequestAt(requestTimeStamp);
-      return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(this.handleResponse.bind(this, requestState));
+      return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(this.handleRecipesResponse.bind(this, requestState));
     }
   }, {
-    key: 'handleResponse',
-    value: function handleResponse(requestState, response) {
+    key: 'handleRecipesResponse',
+    value: function handleRecipesResponse(requestState, response) {
       if (requestState.timeStamp === this.mostRecentRequestAt) {
-        this.setFetching(false);
+        this.setFetchingRecipes(false);
         this.setRecipes(response[requestState.planTypeSelected + '_plan'].recipes.map(function (r) {
           return r.recipe;
         }));
@@ -4382,18 +4382,28 @@ var App = function () {
   }, {
     key: 'fetchProductPairings',
     value: function fetchProductPairings() {
-      var productPairings = {};
+      var _this2 = this;
+
       var productPairingRequests = this.recipes.filter(function (recipe) {
         return recipe.wine_pairing_id;
       }).map(function (recipe) {
-        return $.getJSON('/api/product_pairings/' + recipe.wine_pairing_id);
+        if (!_this2.productPairings[recipe.wine_pairing_id]) {
+          return $.getJSON('/api/product_pairings/' + recipe.wine_pairing_id);
+        } else {
+          return Promise.resolve(null);
+        }
       });
-      Promise.all(productPairingRequests).then(function (responses) {
-        responses.forEach(function (response) {
-          productPairings[response.product_pairings[0].paired_product.id] = response.product_pairings[0].paired_product.producible.wine;
-        });
+      productPairingRequests.forEach(function (request) {
+        request.then(_this2.handleProductPairingResponse.bind(_this2));
       });
-      this.productPairings = productPairings;
+    }
+  }, {
+    key: 'handleProductPairingResponse',
+    value: function handleProductPairingResponse(response) {
+      if (response) {
+        var id = response.product_pairings[0].paired_product.id;
+        this.productPairings[id] = response.product_pairings[0].paired_product.producible.wine;
+      }
     }
   }, {
     key: 'onChange',
@@ -4416,10 +4426,10 @@ var App = function () {
       this.mostRecentRequestAt = moment;
     }
   }, {
-    key: 'setFetching',
-    value: function setFetching(bool) {
-      this.fetching = bool;
-      this.callbackRunnerFor('fetching')();
+    key: 'setFetchingRecipes',
+    value: function setFetchingRecipes(bool) {
+      this.fetchingRecipes = bool;
+      this.callbackRunnerFor('fetchingRecipes')();
     }
   }, {
     key: 'selectPlanType',
@@ -4573,13 +4583,13 @@ var RecipesView = function () {
       app.selectProductPairingId(pairing_id);
     };
     app.onChange('recipes', this.render.bind(this));
-    app.onChange('fetching', this.render.bind(this));
+    app.onChange('fetchingRecipes', this.render.bind(this));
   }
 
   _createClass(RecipesView, [{
     key: 'render',
     value: function render(props) {
-      if (props.fetching) {
+      if (props.fetchingRecipes) {
         this.$recipesContainer.html('');
         this.loadingIndicator.css('display', 'block');
       } else {
