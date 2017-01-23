@@ -2,13 +2,12 @@ const buttonTemplate = Handlebars.compile($('#product-pairing-button-template').
 
 class ProductPairingButtonView {
   constructor(productPairing, app) {
-    this.disabled = productPairing.fetching
     this.$button = $(buttonTemplate({
       content: productPairing.fetching ? 'fetching...' : 'View Wine Pairing',
       disabled: productPairing.fetching ? 'disabled' : ''
     }))
     this.$button.on('click', () => {
-      if (!this.disabled) {
+      if (!productPairing.fetching) {
         app.productPairings.setActiveProductPairing(productPairing.id)
       }
     })
@@ -23,7 +22,7 @@ class ProductPairingButtonView {
     const $content = this.$button.find('#product-pairing-button-content')
     if (!props.fetching) {
       $content.html('View Wine Pairing')
-      this.$button.removeAttr('disabled')
+      this.$button.removeClass('disabled')
     }
   }
 }

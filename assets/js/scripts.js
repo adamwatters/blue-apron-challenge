@@ -4560,17 +4560,14 @@ var buttonTemplate = Handlebars.compile($('#product-pairing-button-template').ht
 
 var ProductPairingButtonView = function () {
   function ProductPairingButtonView(productPairing, app) {
-    var _this = this;
-
     _classCallCheck(this, ProductPairingButtonView);
 
-    this.disabled = productPairing.fetching;
     this.$button = $(buttonTemplate({
       content: productPairing.fetching ? 'fetching...' : 'View Wine Pairing',
       disabled: productPairing.fetching ? 'disabled' : ''
     }));
     this.$button.on('click', function () {
-      if (!_this.disabled) {
+      if (!productPairing.fetching) {
         app.productPairings.setActiveProductPairing(productPairing.id);
       }
     });
@@ -4588,7 +4585,7 @@ var ProductPairingButtonView = function () {
       var $content = this.$button.find('#product-pairing-button-content');
       if (!props.fetching) {
         $content.html('View Wine Pairing');
-        this.$button.removeAttr('disabled');
+        this.$button.removeClass('disabled');
       }
     }
   }]);
