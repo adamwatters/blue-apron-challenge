@@ -5,14 +5,15 @@ class RecipesView {
   constructor(app) {
     this.loadingIndicator = $('#recipes_loading-indicator')
     this.$recipesContainer = $('#recipes-container')
-    this.recipeTemplate = Handlebars.compile($('#recipe-template').html());
+    this.recipeTemplate = Handlebars.compile($('#recipe-template').html())
+    this.productPairingButtons = []
     app.onChange('recipes', this.render.bind(this))
     app.onChange('fetchingRecipes', this.render.bind(this))
   }
 
   render(props) {
     if (props.fetchingRecipes) {
-      this.clearButtonEventListeners()
+      this.destroyProductPairingButtons()
       this.$recipesContainer.html('')
       this.loadingIndicator.css('display', 'block')
     } else if (props.recipes.length > 0) {
@@ -21,8 +22,11 @@ class RecipesView {
     }
   }
 
-  clearButtonEventListeners() {
-    $("[data-event-listener='productPairingButton']").off()
+  destroyProductPairingButtons() {
+    this.productPairingButtons.forEach(button => {
+      button.destroy()
+    })
+    this.productPairingButtons = []
   }
 
   renderRecipes(props) {
@@ -35,6 +39,7 @@ class RecipesView {
       if (recipe.wine_pairing_id) {
         const productPairing = props.productPairings.getById(recipe.wine_pairing_id)
         const buttonView = new ProductPairingButtonView(productPairing, props)
+        this.productPairingButtons.push(buttonView)
         const $productPairingButton = buttonView.build()
         $recipe.find('.recipe').append($productPairingButton)
       }

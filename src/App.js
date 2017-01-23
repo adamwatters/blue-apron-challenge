@@ -1,8 +1,10 @@
 import moment from 'moment'
 import ProductPairings from './ProductPairings'
+import Model from './Model'
 
-class App {
+class App extends Model {
   constructor(config, models) {
+    super()
     this.planTypeSelected = config.planTypeSelected
     this.weekOptions = config.weekOptions
     this.weekSelected = config.weekSelected
@@ -10,7 +12,6 @@ class App {
     this.fetchingRecipes = false
     this.recipes = []
     this.productPairings = new ProductPairings()
-    this.callbacksFor = {}
   }
 
   init() {
@@ -37,22 +38,6 @@ class App {
         this.setRecipes(recipes)
       }
     })
-  }
-
-  callbackRunnerFor(prop) {
-    return () => {
-      if (this.callbacksFor[prop]) {
-        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
-      }
-    }
-  }
-
-  onChange(attribute, callback) {
-    if(this.callbacksFor.hasOwnProperty(attribute)) {
-      this.callbacksFor[attribute].push(callback)
-    } else {
-      this.callbacksFor[attribute] = [callback]
-    }
   }
 
   setRecipes(recipes) {

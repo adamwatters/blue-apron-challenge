@@ -4318,22 +4318,34 @@ var _ProductPairings = require('./ProductPairings');
 
 var _ProductPairings2 = _interopRequireDefault(_ProductPairings);
 
+var _Model2 = require('./Model');
+
+var _Model3 = _interopRequireDefault(_Model2);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var App = function () {
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var App = function (_Model) {
+  _inherits(App, _Model);
+
   function App(config, models) {
     _classCallCheck(this, App);
 
-    this.planTypeSelected = config.planTypeSelected;
-    this.weekOptions = config.weekOptions;
-    this.weekSelected = config.weekSelected;
-    this.mostRecentRequestAt = null;
-    this.fetchingRecipes = false;
-    this.recipes = [];
-    this.productPairings = new _ProductPairings2.default();
-    this.callbacksFor = {};
+    var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
+
+    _this.planTypeSelected = config.planTypeSelected;
+    _this.weekOptions = config.weekOptions;
+    _this.weekSelected = config.weekSelected;
+    _this.mostRecentRequestAt = null;
+    _this.fetchingRecipes = false;
+    _this.recipes = [];
+    _this.productPairings = new _ProductPairings2.default();
+    return _this;
   }
 
   _createClass(App, [{
@@ -4344,7 +4356,7 @@ var App = function () {
   }, {
     key: 'fetchRecipes',
     value: function fetchRecipes() {
-      var _this = this;
+      var _this2 = this;
 
       this.setFetchingRecipes(true);
       var urlWeek = (0, _moment2.default)(this.weekSelected).format('YYYY_MM_DD');
@@ -4356,7 +4368,7 @@ var App = function () {
       };
       this.setMostRecentRequestAt(requestTimeStamp);
       $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(function (response) {
-        if (requestState.timeStamp === _this.mostRecentRequestAt) {
+        if (requestState.timeStamp === _this2.mostRecentRequestAt) {
           var recipes = response[requestState.planTypeSelected + '_plan'].recipes.map(function (r) {
             return r.recipe;
           });
@@ -4365,33 +4377,11 @@ var App = function () {
           }).map(function (recipe) {
             return recipe.wine_pairing_id;
           });
-          _this.productPairings.createFor(productPairingIds);
-          _this.setFetchingRecipes(false);
-          _this.setRecipes(recipes);
+          _this2.productPairings.createFor(productPairingIds);
+          _this2.setFetchingRecipes(false);
+          _this2.setRecipes(recipes);
         }
       });
-    }
-  }, {
-    key: 'callbackRunnerFor',
-    value: function callbackRunnerFor(prop) {
-      var _this2 = this;
-
-      return function () {
-        if (_this2.callbacksFor[prop]) {
-          _this2.callbacksFor[prop].forEach(function (cb) {
-            return cb(Object.assign({}, _this2));
-          });
-        }
-      };
-    }
-  }, {
-    key: 'onChange',
-    value: function onChange(attribute, callback) {
-      if (this.callbacksFor.hasOwnProperty(attribute)) {
-        this.callbacksFor[attribute].push(callback);
-      } else {
-        this.callbacksFor[attribute] = [callback];
-      }
     }
   }, {
     key: 'setRecipes',
@@ -4434,11 +4424,69 @@ var App = function () {
   }]);
 
   return App;
-}();
+}(_Model3.default);
 
 exports.default = App;
 
-},{"./ProductPairings":7,"moment":1}],3:[function(require,module,exports){
+},{"./Model":3,"./ProductPairings":8,"moment":1}],3:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Model = function () {
+  function Model() {
+    _classCallCheck(this, Model);
+
+    this.callbacks = [];
+    this.counter = 0;
+  }
+
+  _createClass(Model, [{
+    key: "callbackRunnerFor",
+    value: function callbackRunnerFor(attribute) {
+      var _this = this;
+
+      return function () {
+        _this.callbacks.filter(function (cb) {
+          return cb.attribute === attribute;
+        }).forEach(function (cb) {
+          cb.callback(Object.assign({}, _this));
+        });
+      };
+    }
+  }, {
+    key: "onChange",
+    value: function onChange(attribute, callback) {
+      this.counter++;
+      var cbObject = {
+        id: this.counter,
+        attribute: attribute,
+        callback: callback
+      };
+      this.callbacks.push(cbObject);
+      return this.counter;
+    }
+  }, {
+    key: "removeListener",
+    value: function removeListener(id) {
+      this.callbacks = this.callbacks.filter(function (cb) {
+        return cb.id !== id;
+      });
+    }
+  }]);
+
+  return Model;
+}();
+
+exports.default = Model;
+
+},{}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4479,7 +4527,7 @@ var PlanTypeSelectorView = function () {
 
 exports.default = PlanTypeSelectorView;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4488,28 +4536,42 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _Model2 = require('./Model');
+
+var _Model3 = _interopRequireDefault(_Model2);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var ProductPairing = function () {
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ProductPairing = function (_Model) {
+  _inherits(ProductPairing, _Model);
+
   function ProductPairing(id) {
     _classCallCheck(this, ProductPairing);
 
-    this.id = id;
-    this.product = null;
-    this.fetching = false;
-    this.callbacksFor = {};
+    var _this = _possibleConstructorReturn(this, (ProductPairing.__proto__ || Object.getPrototypeOf(ProductPairing)).call(this));
+
+    _this.id = id;
+    _this.product = null;
+    _this.fetching = false;
+    return _this;
   }
 
   _createClass(ProductPairing, [{
     key: 'fetch',
     value: function fetch() {
-      var _this = this;
+      var _this2 = this;
 
       this.setFetching(true);
       return $.getJSON('/api/product_pairings/' + this.id).then(function (response) {
         var id = response.product_pairings[0].paired_product.id;
-        _this.product = response.product_pairings[0].paired_product.producible.wine;
-        _this.setFetching(false);
+        _this2.product = response.product_pairings[0].paired_product.producible.wine;
+        _this2.setFetching(false);
       });
     }
   }, {
@@ -4518,36 +4580,14 @@ var ProductPairing = function () {
       this.fetching = bool;
       this.callbackRunnerFor('fetching')();
     }
-  }, {
-    key: 'callbackRunnerFor',
-    value: function callbackRunnerFor(prop) {
-      var _this2 = this;
-
-      return function () {
-        if (_this2.callbacksFor[prop]) {
-          _this2.callbacksFor[prop].forEach(function (cb) {
-            return cb(Object.assign({}, _this2));
-          });
-        }
-      };
-    }
-  }, {
-    key: 'onChange',
-    value: function onChange(attribute, callback) {
-      if (this.callbacksFor.hasOwnProperty(attribute)) {
-        this.callbacksFor[attribute].push(callback);
-      } else {
-        this.callbacksFor[attribute] = [callback];
-      }
-    }
   }]);
 
   return ProductPairing;
-}();
+}(_Model3.default);
 
 exports.default = ProductPairing;
 
-},{}],5:[function(require,module,exports){
+},{"./Model":3}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4564,6 +4604,7 @@ var ProductPairingButtonView = function () {
   function ProductPairingButtonView(productPairing, app) {
     _classCallCheck(this, ProductPairingButtonView);
 
+    this.productPairing = productPairing;
     this.$button = $(buttonTemplate({
       content: productPairing.fetching ? 'fetching...' : 'View Wine Pairing',
       disabled: productPairing.fetching ? 'disabled' : ''
@@ -4573,13 +4614,19 @@ var ProductPairingButtonView = function () {
         app.productPairings.setActiveProductPairing(productPairing.id);
       }
     });
-    productPairing.onChange('fetching', this.render.bind(this));
+    this.listenerID = productPairing.onChange('fetching', this.render.bind(this));
   }
 
   _createClass(ProductPairingButtonView, [{
     key: 'build',
     value: function build() {
       return this.$button;
+    }
+  }, {
+    key: 'destroy',
+    value: function destroy() {
+      this.$button.off();
+      this.productPairing.removeListener(this.listenerID);
     }
   }, {
     key: 'render',
@@ -4597,7 +4644,7 @@ var ProductPairingButtonView = function () {
 
 exports.default = ProductPairingButtonView;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4647,7 +4694,7 @@ var ProductPairingView = function () {
 
 exports.default = ProductPairingView;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4655,6 +4702,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Model2 = require('./Model');
+
+var _Model3 = _interopRequireDefault(_Model2);
 
 var _ProductPairing = require('./ProductPairing');
 
@@ -4664,13 +4715,22 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var ProductPairings = function () {
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ProductPairings = function (_Model) {
+  _inherits(ProductPairings, _Model);
+
   function ProductPairings(ids) {
     _classCallCheck(this, ProductPairings);
 
-    this.productPairings = {};
-    this.active = null;
-    this.callbacksFor = {};
+    var _this = _possibleConstructorReturn(this, (ProductPairings.__proto__ || Object.getPrototypeOf(ProductPairings)).call(this));
+
+    _this.productPairings = {};
+    _this.active = null;
+    _this.callbacksFor = {};
+    return _this;
   }
 
   _createClass(ProductPairings, [{
@@ -4681,12 +4741,12 @@ var ProductPairings = function () {
   }, {
     key: 'fetch',
     value: function fetch(ids) {
-      var _this = this;
+      var _this2 = this;
 
       ids.forEach(function (id) {
-        if (!_this.productPairings[id]) {
-          _this.productPairings[id] = new _ProductPairing2.default(id);
-          _this.productPairings[id].fetch();
+        if (!_this2.productPairings[id]) {
+          _this2.productPairings[id] = new _ProductPairing2.default(id);
+          _this2.productPairings[id].fetch();
         }
       });
     }
@@ -4707,36 +4767,14 @@ var ProductPairings = function () {
       this.active = null;
       this.callbackRunnerFor('active')();
     }
-  }, {
-    key: 'callbackRunnerFor',
-    value: function callbackRunnerFor(prop) {
-      var _this2 = this;
-
-      return function () {
-        if (_this2.callbacksFor[prop]) {
-          _this2.callbacksFor[prop].forEach(function (cb) {
-            return cb(Object.assign({}, _this2));
-          });
-        }
-      };
-    }
-  }, {
-    key: 'onChange',
-    value: function onChange(attribute, callback) {
-      if (this.callbacksFor.hasOwnProperty(attribute)) {
-        this.callbacksFor[attribute].push(callback);
-      } else {
-        this.callbacksFor[attribute] = [callback];
-      }
-    }
   }]);
 
   return ProductPairings;
-}();
+}(_Model3.default);
 
 exports.default = ProductPairings;
 
-},{"./ProductPairing":4}],8:[function(require,module,exports){
+},{"./Model":3,"./ProductPairing":5}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4764,6 +4802,7 @@ var RecipesView = function () {
     this.loadingIndicator = $('#recipes_loading-indicator');
     this.$recipesContainer = $('#recipes-container');
     this.recipeTemplate = Handlebars.compile($('#recipe-template').html());
+    this.productPairingButtons = [];
     app.onChange('recipes', this.render.bind(this));
     app.onChange('fetchingRecipes', this.render.bind(this));
   }
@@ -4772,7 +4811,7 @@ var RecipesView = function () {
     key: 'render',
     value: function render(props) {
       if (props.fetchingRecipes) {
-        this.clearButtonEventListeners();
+        this.destroyProductPairingButtons();
         this.$recipesContainer.html('');
         this.loadingIndicator.css('display', 'block');
       } else if (props.recipes.length > 0) {
@@ -4781,9 +4820,12 @@ var RecipesView = function () {
       }
     }
   }, {
-    key: 'clearButtonEventListeners',
-    value: function clearButtonEventListeners() {
-      $("[data-event-listener='productPairingButton']").off();
+    key: 'destroyProductPairingButtons',
+    value: function destroyProductPairingButtons() {
+      this.productPairingButtons.forEach(function (button) {
+        button.destroy();
+      });
+      this.productPairingButtons = [];
     }
   }, {
     key: 'renderRecipes',
@@ -4799,6 +4841,7 @@ var RecipesView = function () {
         if (recipe.wine_pairing_id) {
           var productPairing = props.productPairings.getById(recipe.wine_pairing_id);
           var buttonView = new _ProductPairingButtonView2.default(productPairing, props);
+          _this.productPairingButtons.push(buttonView);
           var $productPairingButton = buttonView.build();
           $recipe.find('.recipe').append($productPairingButton);
         }
@@ -4837,7 +4880,7 @@ var RecipesView = function () {
 
 exports.default = RecipesView;
 
-},{"./ProductPairingButtonView":5,"moment":1}],9:[function(require,module,exports){
+},{"./ProductPairingButtonView":6,"moment":1}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4864,7 +4907,7 @@ var WeekSelectorView = function WeekSelectorView(app) {
 
 exports.default = WeekSelectorView;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 var _App = require('./App');
@@ -4905,4 +4948,4 @@ $(function () {
   app.init();
 });
 
-},{"./App":2,"./PlanTypeSelectorView":3,"./ProductPairingView":6,"./RecipesView":8,"./WeekSelectorView":9}]},{},[10]);
+},{"./App":2,"./PlanTypeSelectorView":4,"./ProductPairingView":7,"./RecipesView":9,"./WeekSelectorView":10}]},{},[11]);
