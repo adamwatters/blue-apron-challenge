@@ -2,7 +2,7 @@ class ProductPairing {
   constructor(id) {
     this.id = id
     this.product = null
-    this.fetching = false //this shouldn't be initialized as true
+    this.fetching = false
     this.callbacksFor = {};
   }
 

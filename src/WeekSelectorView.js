@@ -1,8 +1,13 @@
 class WeekSelectorView {
   constructor(app) {
-    $('#week_selector').on('change', function(e) {
-      const $weekSelector = e.target
-      app.selectWeek($weekSelector.options[$weekSelector.selectedIndex].value);
+    this.$selector = $('#week-selector')
+    app.weekOptions.forEach((week) => {
+      const selected = week === app.selectedWeek ? 'selected' : ''
+      this.$selector.append(`<option ${selected} value="${week}">${week}</option>`)
+    })
+    this.$selector.on('change', (e) => {
+      const selectorElement = e.target
+      app.selectWeek(selectorElement.options[selectorElement.selectedIndex].value);
     })
   }
 }

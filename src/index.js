@@ -6,7 +6,6 @@ import RecipesView from './RecipesView'
 import ProductPairingView from './ProductPairingView'
 
 const appConfig = {
-  planOptions: ['two_person', 'family'],
   planTypeSelected: 'two_person',
   weekOptions: ['2016-03-21', '2016-03-28'],
   weekSelected: '2016-03-21',

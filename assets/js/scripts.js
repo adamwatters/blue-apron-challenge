@@ -4326,7 +4326,6 @@ var App = function () {
   function App(config, models) {
     _classCallCheck(this, App);
 
-    this.planOptions = config.planOptions;
     this.planTypeSelected = config.planTypeSelected;
     this.weekOptions = config.weekOptions;
     this.weekSelected = config.weekSelected;
@@ -4497,7 +4496,7 @@ var ProductPairing = function () {
 
     this.id = id;
     this.product = null;
-    this.fetching = false; //this shouldn't be initialized as true
+    this.fetching = false;
     this.callbacksFor = {};
   }
 
@@ -4848,11 +4847,18 @@ Object.defineProperty(exports, "__esModule", {
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var WeekSelectorView = function WeekSelectorView(app) {
+  var _this = this;
+
   _classCallCheck(this, WeekSelectorView);
 
-  $('#week_selector').on('change', function (e) {
-    var $weekSelector = e.target;
-    app.selectWeek($weekSelector.options[$weekSelector.selectedIndex].value);
+  this.$selector = $('#week-selector');
+  app.weekOptions.forEach(function (week) {
+    var selected = week === app.selectedWeek ? 'selected' : '';
+    _this.$selector.append('<option ' + selected + ' value="' + week + '">' + week + '</option>');
+  });
+  this.$selector.on('change', function (e) {
+    var selectorElement = e.target;
+    app.selectWeek(selectorElement.options[selectorElement.selectedIndex].value);
   });
 };
 
@@ -4884,7 +4890,6 @@ var _ProductPairingView2 = _interopRequireDefault(_ProductPairingView);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var appConfig = {
-  planOptions: ['two_person', 'family'],
   planTypeSelected: 'two_person',
   weekOptions: ['2016-03-21', '2016-03-28'],
   weekSelected: '2016-03-21'

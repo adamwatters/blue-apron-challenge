@@ -3,7 +3,6 @@ import ProductPairings from './ProductPairings'
 
 class App {
   constructor(config, models) {
-    this.planOptions = config.planOptions
     this.planTypeSelected = config.planTypeSelected
     this.weekOptions = config.weekOptions
     this.weekSelected = config.weekSelected
