@@ -4507,6 +4507,7 @@ var PlanTypeSelectorView = function () {
       app.selectPlanType(e.currentTarget.dataset.planSelect);
     });
     app.onChange('planTypeSelected', this.render.bind(this));
+    this.render(app);
   }
 
   _createClass(PlanTypeSelectorView, [{
