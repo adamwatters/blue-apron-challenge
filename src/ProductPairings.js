@@ -7,14 +7,6 @@ class ProductPairings {
     this.callbacksFor = {};
   }
 
-  callbackRunnerFor(prop) {
-    return () => {
-      if (this.callbacksFor[prop]) {
-        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
-      }
-    }
-  }
-
   createFor(ids) {
     this.fetch(ids)
   }
@@ -40,6 +32,14 @@ class ProductPairings {
   clearActiveProductPairing() {
     this.active = null
     this.callbackRunnerFor('active')()
+  }
+
+  callbackRunnerFor(prop) {
+    return () => {
+      if (this.callbacksFor[prop]) {
+        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
+      }
+    }
   }
 
   onChange(attribute, callback) {

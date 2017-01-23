@@ -12,12 +12,17 @@ class RecipesView {
 
   render(props) {
     if (props.fetchingRecipes) {
+      this.clearButtonEventListeners()
       this.$recipesContainer.html('')
       this.loadingIndicator.css('display', 'block')
     } else if (props.recipes.length > 0) {
       this.loadingIndicator.css('display', 'none')
       this.renderRecipes(props)
     }
+  }
+
+  clearButtonEventListeners() {
+    $("[data-event-listener='productPairingButton']").off()
   }
 
   renderRecipes(props) {
@@ -29,8 +34,8 @@ class RecipesView {
 
       if (recipe.wine_pairing_id) {
         const productPairing = props.productPairings.getById(recipe.wine_pairing_id)
-        const productPairingView = new ProductPairingButtonView(productPairing, props)
-        const $productPairingButton = productPairingView.build()
+        const buttonView = new ProductPairingButtonView(productPairing, props)
+        const $productPairingButton = buttonView.build()
         $recipe.find('.recipe').append($productPairingButton)
       }
 

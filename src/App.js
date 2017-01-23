@@ -1,4 +1,5 @@
 import moment from 'moment'
+import ProductPairings from './ProductPairings'
 
 class App {
   constructor(config, models) {
@@ -9,20 +10,12 @@ class App {
     this.mostRecentRequestAt = null
     this.fetchingRecipes = false
     this.recipes = []
-    this.productPairings = models.productPairings
+    this.productPairings = new ProductPairings()
     this.callbacksFor = {}
   }
 
   init() {
     this.fetchRecipes()
-  }
-
-  callbackRunnerFor(prop) {
-    return () => {
-      if (this.callbacksFor[prop]) {
-        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
-      }
-    }
   }
 
   fetchRecipes() {
@@ -35,17 +28,23 @@ class App {
       planTypeSelected: this.planTypeSelected
     }
     this.setMostRecentRequestAt(requestTimeStamp)
-    return $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then(this.handleRecipesResponse.bind(this, requestState))
+    $.getJSON(`/api/recipes/${urlPlan}/${urlWeek}`).then((response) => {
+      if (requestState.timeStamp === this.mostRecentRequestAt) {
+        const recipes = response[`${requestState.planTypeSelected}_plan`].recipes.map((r) => r.recipe)
+        const productPairingIds = recipes.filter(recipe => recipe.wine_pairing_id)
+                                              .map(recipe => recipe.wine_pairing_id)
+        this.productPairings.createFor(productPairingIds)
+        this.setFetchingRecipes(false)
+        this.setRecipes(recipes)
+      }
+    })
   }
 
-  handleRecipesResponse(requestState, response) {
-    if (requestState.timeStamp === this.mostRecentRequestAt) {
-      const recipes = response[`${requestState.planTypeSelected}_plan`].recipes.map((r) => r.recipe)
-      const productPairingIds = recipes.filter(recipe => recipe.wine_pairing_id)
-                                            .map(recipe => recipe.wine_pairing_id)
-      this.productPairings.createFor(productPairingIds)
-      this.setFetchingRecipes(false)
-      this.setRecipes(recipes)
+  callbackRunnerFor(prop) {
+    return () => {
+      if (this.callbacksFor[prop]) {
+        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
+      }
     }
   }
 

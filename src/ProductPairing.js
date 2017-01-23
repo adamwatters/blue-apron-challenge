@@ -6,14 +6,6 @@ class ProductPairing {
     this.callbacksFor = {};
   }
 
-  callbackRunnerFor(prop) {
-    return () => {
-      if (this.callbacksFor[prop]) {
-        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
-      }
-    }
-  }
-
   fetch() {
     this.setFetching(true)
     return $.getJSON(`/api/product_pairings/${this.id}`).then(response => {
@@ -26,6 +18,14 @@ class ProductPairing {
   setFetching(bool) {
     this.fetching = bool
     this.callbackRunnerFor('fetching')()
+  }
+
+  callbackRunnerFor(prop) {
+    return () => {
+      if (this.callbacksFor[prop]) {
+        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
+      }
+    }
   }
 
   onChange(attribute, callback) {

@@ -4314,6 +4314,10 @@ var _moment = require('moment');
 
 var _moment2 = _interopRequireDefault(_moment);
 
+var _ProductPairings = require('./ProductPairings');
+
+var _ProductPairings2 = _interopRequireDefault(_ProductPairings);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -4329,7 +4333,7 @@ var App = function () {
     this.mostRecentRequestAt = null;
     this.fetchingRecipes = false;
     this.recipes = [];
-    this.productPairings = models.productPairings;
+    this.productPairings = new _ProductPairings2.default();
     this.callbacksFor = {};
   }
 
@@ -4339,21 +4343,10 @@ var App = function () {
       this.fetchRecipes();
     }
   }, {
-    key: 'callbackRunnerFor',
-    value: function callbackRunnerFor(prop) {
-      var _this = this;
-
-      return function () {
-        if (_this.callbacksFor[prop]) {
-          _this.callbacksFor[prop].forEach(function (cb) {
-            return cb(Object.assign({}, _this));
-          });
-        }
-      };
-    }
-  }, {
     key: 'fetchRecipes',
     value: function fetchRecipes() {
+      var _this = this;
+
       this.setFetchingRecipes(true);
       var urlWeek = (0, _moment2.default)(this.weekSelected).format('YYYY_MM_DD');
       var urlPlan = this.planTypeSelected;
@@ -4363,24 +4356,34 @@ var App = function () {
         planTypeSelected: this.planTypeSelected
       };
       this.setMostRecentRequestAt(requestTimeStamp);
-      return $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(this.handleRecipesResponse.bind(this, requestState));
+      $.getJSON('/api/recipes/' + urlPlan + '/' + urlWeek).then(function (response) {
+        if (requestState.timeStamp === _this.mostRecentRequestAt) {
+          var recipes = response[requestState.planTypeSelected + '_plan'].recipes.map(function (r) {
+            return r.recipe;
+          });
+          var productPairingIds = recipes.filter(function (recipe) {
+            return recipe.wine_pairing_id;
+          }).map(function (recipe) {
+            return recipe.wine_pairing_id;
+          });
+          _this.productPairings.createFor(productPairingIds);
+          _this.setFetchingRecipes(false);
+          _this.setRecipes(recipes);
+        }
+      });
     }
   }, {
-    key: 'handleRecipesResponse',
-    value: function handleRecipesResponse(requestState, response) {
-      if (requestState.timeStamp === this.mostRecentRequestAt) {
-        var recipes = response[requestState.planTypeSelected + '_plan'].recipes.map(function (r) {
-          return r.recipe;
-        });
-        var productPairingIds = recipes.filter(function (recipe) {
-          return recipe.wine_pairing_id;
-        }).map(function (recipe) {
-          return recipe.wine_pairing_id;
-        });
-        this.productPairings.createFor(productPairingIds);
-        this.setFetchingRecipes(false);
-        this.setRecipes(recipes);
-      }
+    key: 'callbackRunnerFor',
+    value: function callbackRunnerFor(prop) {
+      var _this2 = this;
+
+      return function () {
+        if (_this2.callbacksFor[prop]) {
+          _this2.callbacksFor[prop].forEach(function (cb) {
+            return cb(Object.assign({}, _this2));
+          });
+        }
+      };
     }
   }, {
     key: 'onChange',
@@ -4436,7 +4439,7 @@ var App = function () {
 
 exports.default = App;
 
-},{"moment":1}],3:[function(require,module,exports){
+},{"./ProductPairings":7,"moment":1}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4499,28 +4502,15 @@ var ProductPairing = function () {
   }
 
   _createClass(ProductPairing, [{
-    key: 'callbackRunnerFor',
-    value: function callbackRunnerFor(prop) {
-      var _this = this;
-
-      return function () {
-        if (_this.callbacksFor[prop]) {
-          _this.callbacksFor[prop].forEach(function (cb) {
-            return cb(Object.assign({}, _this));
-          });
-        }
-      };
-    }
-  }, {
     key: 'fetch',
     value: function fetch() {
-      var _this2 = this;
+      var _this = this;
 
       this.setFetching(true);
       return $.getJSON('/api/product_pairings/' + this.id).then(function (response) {
         var id = response.product_pairings[0].paired_product.id;
-        _this2.product = response.product_pairings[0].paired_product.producible.wine;
-        _this2.setFetching(false);
+        _this.product = response.product_pairings[0].paired_product.producible.wine;
+        _this.setFetching(false);
       });
     }
   }, {
@@ -4528,6 +4518,19 @@ var ProductPairing = function () {
     value: function setFetching(bool) {
       this.fetching = bool;
       this.callbackRunnerFor('fetching')();
+    }
+  }, {
+    key: 'callbackRunnerFor',
+    value: function callbackRunnerFor(prop) {
+      var _this2 = this;
+
+      return function () {
+        if (_this2.callbacksFor[prop]) {
+          _this2.callbacksFor[prop].forEach(function (cb) {
+            return cb(Object.assign({}, _this2));
+          });
+        }
+      };
     }
   }, {
     key: 'onChange',
@@ -4672,19 +4675,6 @@ var ProductPairings = function () {
   }
 
   _createClass(ProductPairings, [{
-    key: 'callbackRunnerFor',
-    value: function callbackRunnerFor(prop) {
-      var _this = this;
-
-      return function () {
-        if (_this.callbacksFor[prop]) {
-          _this.callbacksFor[prop].forEach(function (cb) {
-            return cb(Object.assign({}, _this));
-          });
-        }
-      };
-    }
-  }, {
     key: 'createFor',
     value: function createFor(ids) {
       this.fetch(ids);
@@ -4692,12 +4682,12 @@ var ProductPairings = function () {
   }, {
     key: 'fetch',
     value: function fetch(ids) {
-      var _this2 = this;
+      var _this = this;
 
       ids.forEach(function (id) {
-        if (!_this2.productPairings[id]) {
-          _this2.productPairings[id] = new _ProductPairing2.default(id);
-          _this2.productPairings[id].fetch();
+        if (!_this.productPairings[id]) {
+          _this.productPairings[id] = new _ProductPairing2.default(id);
+          _this.productPairings[id].fetch();
         }
       });
     }
@@ -4717,6 +4707,19 @@ var ProductPairings = function () {
     value: function clearActiveProductPairing() {
       this.active = null;
       this.callbackRunnerFor('active')();
+    }
+  }, {
+    key: 'callbackRunnerFor',
+    value: function callbackRunnerFor(prop) {
+      var _this2 = this;
+
+      return function () {
+        if (_this2.callbacksFor[prop]) {
+          _this2.callbacksFor[prop].forEach(function (cb) {
+            return cb(Object.assign({}, _this2));
+          });
+        }
+      };
     }
   }, {
     key: 'onChange',
@@ -4770,12 +4773,18 @@ var RecipesView = function () {
     key: 'render',
     value: function render(props) {
       if (props.fetchingRecipes) {
+        this.clearButtonEventListeners();
         this.$recipesContainer.html('');
         this.loadingIndicator.css('display', 'block');
       } else if (props.recipes.length > 0) {
         this.loadingIndicator.css('display', 'none');
         this.renderRecipes(props);
       }
+    }
+  }, {
+    key: 'clearButtonEventListeners',
+    value: function clearButtonEventListeners() {
+      $("[data-event-listener='productPairingButton']").off();
     }
   }, {
     key: 'renderRecipes',
@@ -4790,8 +4799,8 @@ var RecipesView = function () {
 
         if (recipe.wine_pairing_id) {
           var productPairing = props.productPairings.getById(recipe.wine_pairing_id);
-          var productPairingView = new _ProductPairingButtonView2.default(productPairing, props);
-          var $productPairingButton = productPairingView.build();
+          var buttonView = new _ProductPairingButtonView2.default(productPairing, props);
+          var $productPairingButton = buttonView.build();
           $recipe.find('.recipe').append($productPairingButton);
         }
 
@@ -4856,10 +4865,6 @@ var _App = require('./App');
 
 var _App2 = _interopRequireDefault(_App);
 
-var _ProductPairings = require('./ProductPairings');
-
-var _ProductPairings2 = _interopRequireDefault(_ProductPairings);
-
 var _PlanTypeSelectorView = require('./PlanTypeSelectorView');
 
 var _PlanTypeSelectorView2 = _interopRequireDefault(_PlanTypeSelectorView);
@@ -4885,11 +4890,7 @@ var appConfig = {
   weekSelected: '2016-03-21'
 };
 
-var models = {
-  productPairings: new _ProductPairings2.default()
-};
-
-var app = new _App2.default(appConfig, models);
+var app = new _App2.default(appConfig);
 
 $(function () {
   var weekSelectorView = new _WeekSelectorView2.default(app);
@@ -4899,4 +4900,4 @@ $(function () {
   app.init();
 });
 
-},{"./App":2,"./PlanTypeSelectorView":3,"./ProductPairingView":6,"./ProductPairings":7,"./RecipesView":8,"./WeekSelectorView":9}]},{},[10]);
+},{"./App":2,"./PlanTypeSelectorView":3,"./ProductPairingView":6,"./RecipesView":8,"./WeekSelectorView":9}]},{},[10]);
