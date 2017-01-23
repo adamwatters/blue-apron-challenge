@@ -7,13 +7,13 @@
 
 ### Technnical/Design Decisions
 
-* I created a Model base class that allows for registering and removing callbacks to execute on attribute changes. All model classes extend the Model base class. Views and the router listen for changes on models and render/update accordingly. One complication was including a method for removing callbacks. Buttons for opening wine modals are created and destroyed on each render cycle of the recipes view - I needed a way to remove the callbacks they registered with their respective Product Pairing models. I accomplished this by returning and ID for each registered callback that can be be passed to a the models remove listener method.
+* I created a Model base class that allows for registering and removing callbacks to execute on attribute changes. All model classes extend the Model base class. Views and the router listen for changes on models and render/update accordingly. One complication was including a method for removing callbacks. Buttons for opening wine modals are created and destroyed on each render cycle of the recipes view - I needed a way to remove the callbacks they registered with their respective Product Pairing models. I accomplished this by returning an ID for each registered callback that can be be passed to a the model's remove listener method.
 
-* I kept my handlebars templated logicless. I think this is generally a good design decision because it keeps all the logic in one place. With more time I would break down my UI into smaller components to make the DOM building and manipulation easier to reason about - there's a lot happening in the RecipeView's render method.
+* I kept my handlebars templated logicless. I think this is generally a good design decision because it keeps all the logic in one place. With more time I would break down my UI into smaller components to make the DOM building and manipulation easier to reason about - right now there's a lot happening in the RecipeView's render method.
 
-* I included moment.js to format dates for API calls and for display. Moment.js simplifies the native API for dealing with Dates. I used it to save myself time and to improve readability.
+* I included moment.js to format dates for API calls and for display. Moment.js simplifies the native API for dealing with Dates. I used it to save on dev time and to improve readability.
 
-* With more time I would have written tests. This project was a good learning exercise for me - normally given this task I would have reached for a framework. Without a framework, I was exploring and designing as I went along.
+* With more time I would have written tests, but before spending the time writing tests I would want to clean things up further. Specifically I'm not happy with the way every view is being passed the entire app and calling attibute setters directly - I would add a dispatcher layer to handle events in the application. This project was a good learning exercise for me - normally given this task I would have reached for a framework. Without a framework, I was exploring and designing as I went along.
 
 
 ## Setup:
