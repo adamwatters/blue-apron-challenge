@@ -1,5 +1,19 @@
 # Adam Watters - Take Home Test
 
+## Notes
+* Building scripts.js with grunt-browserify task from ./src directory. Root file is ./src/index.js
+
+## Writeup
+
+### Technnical/Design Decisions
+
+* I created a Model base class that allows for registering and removing callbacks to execute on attribute changes. All model classes extend the Model base class. Views and the router listen for changes on models and render/update accordingly. One complication was including a method for removing callbacks. Buttons for opening wine modals are created and destroyed on each render cycle of the recipes view - I needed a way to remove the callbacks they registered with their respective Product Pairing models. I accomplished this by returning and ID for each registered callback that can be be passed to a the models remove listener method.
+
+* I kept my handlebars templated logicless. I think this is generally a good design decision because it keeps all the logic in one place. With more time I would break down my UI into smaller components to make the DOM building and manipulation easier to reason about - there's a lot happening in the RecipeView's render method.
+
+* I included moment.js to format dates for API calls and for display. Moment.js simplifies the native API for dealing with Dates. I used it to save myself time and to improve readability.
+
+* With more time I would have written tests. This project was a good learning exercise for me - normally given this task I would have reached for a framework. Without a framework, I was exploring and designing as I went along.
 
 
 ## Instructions
@@ -11,7 +25,7 @@ Using the HTML, CSS, and mocked API that has been provided for you, your job is 
 ### Install [http-server](https://www.npmjs.com/package/http-server)
 
 ```
-$ npm install http-server -g
+$ npm install
 ```
 
 ### Start [http-server](https://www.npmjs.com/package/http-server)
