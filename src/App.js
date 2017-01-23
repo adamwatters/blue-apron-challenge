@@ -14,21 +14,15 @@ class App {
   }
 
   init() {
-    this.updateRecipes()
+    this.fetchRecipes()
   }
 
   callbackRunnerFor(prop) {
     return () => {
-      this.callbacksFor[prop].forEach(cb => cb(this))
+      if (this.callbacksFor[prop]) {
+        this.callbacksFor[prop].forEach(cb => cb(Object.assign({}, this)))
+      }
     }
-  }
-
-  updateRecipes() {
-    this.fetchRecipes().then(() => {
-      const productPairingIds = this.recipes.filter(recipe => recipe.wine_pairing_id)
-                                            .map(recipe => recipe.wine_pairing_id)
-      this.productPairings.fetch(productPairingIds)
-    })
   }
 
   fetchRecipes() {
@@ -46,8 +40,12 @@ class App {
 
   handleRecipesResponse(requestState, response) {
     if (requestState.timeStamp === this.mostRecentRequestAt) {
+      const recipes = response[`${requestState.planTypeSelected}_plan`].recipes.map((r) => r.recipe)
+      const productPairingIds = recipes.filter(recipe => recipe.wine_pairing_id)
+                                            .map(recipe => recipe.wine_pairing_id)
+      this.productPairings.createFor(productPairingIds)
       this.setFetchingRecipes(false)
-      this.setRecipes(response[`${requestState.planTypeSelected}_plan`].recipes.map((r) => r.recipe))
+      this.setRecipes(recipes)
     }
   }
 
@@ -64,6 +62,11 @@ class App {
     this.callbackRunnerFor('recipes')()
   }
 
+  clearRecipes() {
+    this.recipes = []
+    this.callbackRunnerFor('recipes')()
+  }
+
   setMostRecentRequestAt(moment) {
     this.mostRecentRequestAt = moment;
   }
@@ -76,12 +79,14 @@ class App {
   selectPlanType(planType) {
     this.planTypeSelected = planType
     this.callbackRunnerFor('planTypeSelected')()
-    this.updateRecipes()
+    this.clearRecipes()
+    this.fetchRecipes()
   }
 
   selectWeek(week) {
     this.weekSelected = week
-    this.updateRecipes()
+    this.clearRecipes()
+    this.fetchRecipes()
   }
 
 }

@@ -1,14 +1,11 @@
 import moment from 'moment'
+import ProductPairingButtonView from './ProductPairingButtonView'
 
 class RecipesView {
   constructor(app) {
     this.loadingIndicator = $('#recipes_loading-indicator')
     this.$recipesContainer = $('#recipes-container')
     this.recipeTemplate = Handlebars.compile($('#recipe-template').html());
-    this.productPairingButtonTemplate = Handlebars.compile($('#product-pairing-button-template').html());
-    this.handlePairingButtonClick = (pairing_id) => {
-      app.productPairings.setActiveProductPairing(pairing_id)
-    }
     app.onChange('recipes', this.render.bind(this))
     app.onChange('fetchingRecipes', this.render.bind(this))
   }
@@ -17,7 +14,7 @@ class RecipesView {
     if (props.fetchingRecipes) {
       this.$recipesContainer.html('')
       this.loadingIndicator.css('display', 'block')
-    } else {
+    } else if (props.recipes.length > 0) {
       this.loadingIndicator.css('display', 'none')
       this.renderRecipes(props)
     }
@@ -31,10 +28,9 @@ class RecipesView {
       const $recipe = $(this.recipeTemplate(recipe))
 
       if (recipe.wine_pairing_id) {
-        const $productPairingButton = $(this.productPairingButtonTemplate({}))
-        $productPairingButton.on('click', () => {
-          this.handlePairingButtonClick(recipe.wine_pairing_id);
-        })
+        const productPairing = props.productPairings.getById(recipe.wine_pairing_id)
+        const productPairingView = new ProductPairingButtonView(productPairing, props)
+        const $productPairingButton = productPairingView.build()
         $recipe.find('.recipe').append($productPairingButton)
       }
 
