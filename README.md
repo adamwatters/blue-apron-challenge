@@ -1,9 +1,9 @@
 # Adam Watters - Take Home Test
 
-## Notes
-* Building scripts.js with grunt-browserify task from ./src directory. Root file is ./src/index.js
-
 ## Writeup
+
+### Notes
+* Building scripts.js with grunt-browserify task from ./src directory. Root file is ./src/index.js
 
 ### Technnical/Design Decisions
 
@@ -15,10 +15,6 @@
 
 * With more time I would have written tests. This project was a good learning exercise for me - normally given this task I would have reached for a framework. Without a framework, I was exploring and designing as I went along.
 
-
-## Instructions
-
-Using the HTML, CSS, and mocked API that has been provided for you, your job is to write javascript that drives the view layer of a Blue Apron menu page according to the spec below.
 
 ## Setup:
 
