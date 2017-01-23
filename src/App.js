@@ -1,13 +1,15 @@
 import moment from 'moment'
 import ProductPairings from './ProductPairings'
+import Router from './Router'
 import Model from './Model'
 
 class App extends Model {
   constructor(config, models) {
     super()
-    this.planTypeSelected = config.planTypeSelected
+    this.router = new Router(this)
+    this.planTypeSelected = this.router.getParam('p') || config.planTypeSelected
     this.weekOptions = config.weekOptions
-    this.weekSelected = config.weekSelected
+    this.weekSelected = this.router.getParam('w') || config.weekSelected
     this.mostRecentRequestAt = null
     this.fetchingRecipes = false
     this.recipes = []
@@ -68,6 +70,7 @@ class App extends Model {
 
   selectWeek(week) {
     this.weekSelected = week
+    this.callbackRunnerFor('weekSelected')()
     this.clearRecipes()
     this.fetchRecipes()
   }

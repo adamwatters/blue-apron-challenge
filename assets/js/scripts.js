@@ -4318,6 +4318,10 @@ var _ProductPairings = require('./ProductPairings');
 
 var _ProductPairings2 = _interopRequireDefault(_ProductPairings);
 
+var _Router = require('./Router');
+
+var _Router2 = _interopRequireDefault(_Router);
+
 var _Model2 = require('./Model');
 
 var _Model3 = _interopRequireDefault(_Model2);
@@ -4338,9 +4342,10 @@ var App = function (_Model) {
 
     var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
 
-    _this.planTypeSelected = config.planTypeSelected;
+    _this.router = new _Router2.default(_this);
+    _this.planTypeSelected = _this.router.getParam('p') || config.planTypeSelected;
     _this.weekOptions = config.weekOptions;
-    _this.weekSelected = config.weekSelected;
+    _this.weekSelected = _this.router.getParam('w') || config.weekSelected;
     _this.mostRecentRequestAt = null;
     _this.fetchingRecipes = false;
     _this.recipes = [];
@@ -4418,6 +4423,7 @@ var App = function (_Model) {
     key: 'selectWeek',
     value: function selectWeek(week) {
       this.weekSelected = week;
+      this.callbackRunnerFor('weekSelected')();
       this.clearRecipes();
       this.fetchRecipes();
     }
@@ -4428,7 +4434,7 @@ var App = function (_Model) {
 
 exports.default = App;
 
-},{"./Model":3,"./ProductPairings":8,"moment":1}],3:[function(require,module,exports){
+},{"./Model":3,"./ProductPairings":8,"./Router":10,"moment":1}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4888,6 +4894,47 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Router = function () {
+  function Router(app) {
+    _classCallCheck(this, Router);
+
+    app.onChange('planTypeSelected', this.update.bind(this));
+    app.onChange('weekSelected', this.update.bind(this));
+  }
+
+  _createClass(Router, [{
+    key: 'update',
+    value: function update(state) {
+      var plan = state.planTypeSelected;
+      var week = state.weekSelected;
+      window.history.pushState(null, null, '?p=' + plan + '&w=' + week);
+    }
+  }, {
+    key: 'getParam',
+    value: function getParam(n) {
+      var name = n.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      var results = regex.exec(window.location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+  }]);
+
+  return Router;
+}();
+
+exports.default = Router;
+
+},{}],11:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var WeekSelectorView = function WeekSelectorView(app) {
@@ -4897,7 +4944,7 @@ var WeekSelectorView = function WeekSelectorView(app) {
 
   this.$selector = $('#week-selector');
   app.weekOptions.forEach(function (week) {
-    var selected = week === app.selectedWeek ? 'selected' : '';
+    var selected = week === app.weekSelected ? 'selected' : '';
     _this.$selector.append('<option ' + selected + ' value="' + week + '">' + week + '</option>');
   });
   this.$selector.on('change', function (e) {
@@ -4908,7 +4955,7 @@ var WeekSelectorView = function WeekSelectorView(app) {
 
 exports.default = WeekSelectorView;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 var _App = require('./App');
@@ -4949,4 +4996,4 @@ $(function () {
   app.init();
 });
 
-},{"./App":2,"./PlanTypeSelectorView":4,"./ProductPairingView":7,"./RecipesView":9,"./WeekSelectorView":10}]},{},[11]);
+},{"./App":2,"./PlanTypeSelectorView":4,"./ProductPairingView":7,"./RecipesView":9,"./WeekSelectorView":11}]},{},[12]);
